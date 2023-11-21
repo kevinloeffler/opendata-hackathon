@@ -1,7 +1,7 @@
 from lib.preprocessing import read_data, reformat, split_data, normalize_data
 from lib.model import train_model
 
-data = read_data('/home/ubuntu16/Documents/OST/5Sem2023HS/ml/hackaton/fullstandssensoren-sammelstellen-stadt-stgallen.csv')
+data = read_data('data/fill-level.csv')
 #print(data.iloc[2: 10])
 #data = normalize_data(data)
 

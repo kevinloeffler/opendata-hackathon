@@ -16,9 +16,7 @@ def train_model(x_train, y_train):
     # Add a Dense layer with 10 units.
     model.add(layers.Dense(10))
 
-    optimizer = tf.keras.optimizers.Adam(
-        learning_rate = 0.001
-        )
+    optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=0.001)
 
     model.compile(optimizer=optimizer, loss='mean_squared_error')
     losses = model.fit(x_train, y_train, epochs=3, batch_size = 80)
