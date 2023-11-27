@@ -16,7 +16,8 @@ and safe it at `data/fill-level.csv` or use the `download-data.sh` script.
 
 ### API
 
-Document the api for pathfinding, in progress...
+Use the generate_dummy_data method to receive random sensor values. The model should return the prediction the same way.
+The method takes a list of the requested sensor names as argument.
 
 ### Data
 List of all sensor names:
