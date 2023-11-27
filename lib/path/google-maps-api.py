@@ -1,4 +1,5 @@
-import requests
+import googlemaps
+from datetime import datetime
 
 with open('.env', 'r') as fh:
     vars_dict = dict(
@@ -6,40 +7,17 @@ with open('.env', 'r') as fh:
         for line in fh.readlines() if not line.startswith('#')
     )
 
-def get_dist_dur(api_key, start, end):
-    # For lat/lon: https://maps.googleapis.com/maps/api/geocode/json
-    base_url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+gmaps = googlemaps.Client(key=vars_dict["MAPS_KEY"])
 
-    params = {
-        "origins": start,
-        "destinations": end,
-        "key": api_key
-    }
+origins = [
+    (47.4120960807, 9.3359106884)
+]
+destinations = [
+    (47.43724, 9.37681),
+]
 
-    response = requests.get(base_url, params=params)
-
-    if response.status_code == 200:
-        data = response.json()
-        if data["status"] == "OK":
-            distance = data["rows"][0]["elements"][0]["distance"]["text"]
-            duration = data["rows"][0]["elements"][0]["duration"]["text"]
-            return distance, duration
-        else:
-            print("Request failed.")
-            return None, None
-    else:
-        print("Failed to make the request.")
-        return None, None
-
-api_key = vars_dict["MAPS_KEY"]
-
-
-start = "Palace Lucerna, Nové Město"
-end = "Project FOX, Praha 3-Žižkov"
-distance, duration = get_dist_dur(api_key, start, end)
-
-if distance and duration:
-
-    print(f"Driving Distance: {distance}")
-
-    print(f"Driving Duration: {duration}")
+matrix = gmaps.distance_matrix(origins, destinations)
+for row in matrix["rows"]:
+    for element in row["elements"]:
+        print(element["duration"])
+print(matrix)
