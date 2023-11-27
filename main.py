@@ -1,14 +1,19 @@
-from lib.preprocessing import read_data, reformat, split_data, normalize_data
-from lib.model import train_model
+from numpy import array
+
+from lib.models.vanilla_lstm import VanillaLSTM
+from lib.preprocessing import read_data, sequence_data, get_sensor_values, get_training_data
 
 data = read_data('data/fill-level.csv')
-#print(data.iloc[2: 10])
-#data = normalize_data(data)
+test_sensor = get_sensor_values(data, '107075 | 2B2A')
+training_data = get_training_data(data)
 
-train_data, test_data = split_data(data, 0.8)
+train_x, train_y = sequence_data(training_data, 5)
+#for index, x in enumerate(train_x):
+#    print(x, '->', train_y[index])
 
-train_x, train_y = reformat(train_data[10:20], 5)
-#print('output', train_x)
-#print(len(data), len(train_data), len(test_data))
 
-train_model(train_x, train_y)
+vanilla_lstm_model = VanillaLSTM(step_size=5)
+vanilla_lstm_model.train(train_x, train_y, 40)
+example_data = array([0.18987179, 0.21141369, 0.2417378, 0.29216755, 0.295375, 0.3538226744186046])
+prediction = vanilla_lstm_model.predict(example_data[:5])
+print(f'prediction: {prediction[0]}, truth: {example_data[5]}')  # prediction: 0.31279, truth: 0.35382
