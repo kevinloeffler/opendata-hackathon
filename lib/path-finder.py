@@ -13,6 +13,8 @@ import os
 from googlemaps.maps import StaticMapPath
 from googlemaps.maps import StaticMapMarker
 
+create_map = True
+
 with open('.env', 'r') as fh:
     vars_dict = dict(
         tuple(line.replace('\n', '').split('='))
@@ -29,6 +31,7 @@ time_per_working_day = 8 * 60 * 60 # 8 hours in seconds
 time_per_emptying = 30 * 60 # 30 minutes in seconds
 day = datetime(2023, 12, 4, 10, 00) # Date of prediction
 station_0 = (47.4156038, 9.3325804) # Assumption: Empyting starts and ends at Kehrichtheizkraftwerk St.Gallen
+empty_if_below = 0.4
 
 def get_distances(n):
     distances = np.empty((n+1,n+1))
@@ -54,8 +57,12 @@ def get_distances(n):
 
         # TODO: check if this makes sense:
         # Set weights of edges to inverse of level given by the sensor
-        distances[node_from][node_to] = distance_in_seconds / sensor_to["level"]
-        distances[node_to][node_from] = distance_in_seconds / sensor_from["level"]
+        # TODO: add criterium so that stations under 0.5 are not being emptied
+        cost_to = distance_in_seconds / sensor_to["level"] if sensor_to["level"] > empty_if_below else np.inf
+        cost_from = distance_in_seconds / sensor_from["level"] if sensor_from["level"] > empty_if_below else np.inf
+
+        distances[node_from][node_to] = cost_to
+        distances[node_to][node_from] = cost_from
 
     # Get distances to sensor_0 which
     for node_to in range(n):
@@ -110,25 +117,26 @@ while(needed_time < (time_per_working_day - distances[current_stop_idx, -1] - ti
     if len(visited_stops) == n+1:
         # all stops visited
         break
-    min_cost = np.min(np.delete(distances[0,:], visited_stops, axis=0)) # Min cost of unvisited stops
-    for idx in np.argwhere(distances[0,:] == min_cost).ravel():
+    min_cost = np.min(np.delete(distances[current_stop_idx,:], visited_stops, axis=0)) # Min cost of unvisited stops
+    for idx in np.argwhere(distances[current_stop_idx,:] == min_cost).ravel():
         if idx not in visited_stops:
             next_stop_idx = idx
     
-    needed_time += min_cost + time_per_emptying
+    actual_travel_time = sensor_data.iloc[next_stop_idx]["level"]
+    needed_time += actual_travel_time + time_per_emptying
     current_stop_idx = next_stop_idx
 
 visited_stops.append(-1) # End at station_0
-needed_time += distances[current_stop_idx, 0] # Add time to go to station_0
+needed_time += distances[current_stop_idx, -1] # Add time to go to station_0
     
 print("Needed time:")
 print(needed_time)
 print("Trajectory:")
 for stop in visited_stops:
-    if stop == 0:
+    if stop == -1:
         print(stop)
     else:
-        print(f"{stop} -> {levels[stop-1]}")
+        print(f"{stop} -> {levels[stop]}")
 
 unvisited_stops = np.setdiff1d(range(n), visited_stops)
 print("Unvisited:")
@@ -136,46 +144,47 @@ print(unvisited_stops)
 print("Filling levels:")
 print(levels)
 
-points = []
-markers = []
-for stop in visited_stops:
-    if stop != -1:
-        sensor = sensor_data.iloc[stop]
-        location = sensor["geo_point_2d"].split(", ")
-        markers.append(StaticMapMarker(
-            locations=[location],
-            size="tiny",
-            color="red",
-            #label=chr(ord('a') + -32 + stop),
-        ))
-    else:
-        location = station_0
-    points.append(location)
-markers.append(StaticMapMarker(
-    locations=[station_0],
-    size="tiny",
-    color="blue",
-))
+if create_map:
+    points = []
+    markers = []
+    for stop in visited_stops:
+        if stop != -1:
+            sensor = sensor_data.iloc[stop]
+            location = sensor["geo_point_2d"].split(", ")
+            markers.append(StaticMapMarker(
+                locations=[location],
+                size="tiny",
+                color="red",
+                #label=chr(ord('a') + -32 + stop),
+            ))
+        else:
+            location = station_0
+        points.append(location)
+    markers.append(StaticMapMarker(
+        locations=[station_0],
+        size="tiny",
+        color="blue",
+    ))
 
-st_gallen = (47.4245, 9.3767)
-path = StaticMapPath(
-    points=points,
-    weight=1,
-    color="blue",
-)
-response = gmaps.static_map(
-    size=(400, 400),
-    zoom=12,
-    center=st_gallen,
-    maptype="satellite",
-    format="png",
-    scale=2,
-    path=path,
-    markers=markers
-)
-print()
-f = open("map-output.png", 'wb')
-for chunk in response:
-    if chunk:
-        f.write(chunk)
-f.close()
+    st_gallen = (47.4245, 9.3767)
+    path = StaticMapPath(
+        points=points,
+        weight=1,
+        color="blue",
+    )
+    response = gmaps.static_map(
+        size=(400, 400),
+        zoom=12,
+        center=st_gallen,
+        maptype="satellite",
+        format="png",
+        scale=2,
+        path=path,
+        markers=markers
+    )
+    print()
+    f = open("map-output.png", 'wb')
+    for chunk in response:
+        if chunk:
+            f.write(chunk)
+    f.close()
