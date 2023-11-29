@@ -22,14 +22,16 @@ def read_data(from_path: str, use_coordinates: bool = False):
     raw_data = raw_data.rename(columns={'Gemessen am': 'date', 'Tags': 'type', 'Füllstandsdistanz': 'level', 'Sensorname': 'sensor_id'})
 
     filtered_data = raw_data[raw_data['level'].notna()]  # filter all rows with invalid sensor data
-    days_merged = _merge_days(filtered_data)
+    days_merged = _merge_days(filtered_data, use_coordinates)
     days_merged['level'] = days_merged['level'].apply(lambda level: normalize_data(level))  # normalise data
     return days_merged
 
 
-def _merge_days(dataframe: pd.DataFrame):
+def _merge_days(dataframe: pd.DataFrame, use_coordinates):
     dataframe['date'] = pd.to_datetime(dataframe['date'], utc=True).dt.date
-    return dataframe.groupby(['sensor_id', 'date']).agg({'level': 'mean', 'type': 'last'}).reset_index()
+    columns = ['sensor_id', 'date']
+    if use_coordinates: columns.append('geo_point_2d')
+    return dataframe.groupby(columns).agg({'level': 'mean', 'type': 'last'}).reset_index()
 
 
 def get_sensor_values(dataframe: pd.DataFrame, sensor_name: str) -> list[float]:

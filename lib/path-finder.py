@@ -14,6 +14,13 @@ from googlemaps.maps import StaticMapPath
 from googlemaps.maps import StaticMapMarker
 
 create_map = True
+show_min_max_markers = False
+dist_file = 'data/distances.npy'
+time_per_working_day = 8 * 60 * 60 # 8 hours in seconds
+time_per_emptying = 30 * 60 # 15 minutes in seconds
+day = datetime(2023, 12, 4, 10, 00) # Date of prediction
+station_0 = (47.4156038, 9.3325804) # Assumption: Empyting starts and ends at Kehrichtheizkraftwerk St.Gallen
+empty_if_below = 0.4
 
 with open('.env', 'r') as fh:
     vars_dict = dict(
@@ -22,19 +29,15 @@ with open('.env', 'r') as fh:
     )
 
 sensor_data = read_data('data/fill-level.csv', use_coordinates=True)
+sensor_data = sensor_data.loc[sensor_data.groupby('sensor_id').date.idxmax()] # Get sensor_id only once
+#sensor_data = sensor_data[sensor_data['level'] > empty_if_below-0.1] # Don't use very low values to get more interesting results
+
+n = sensor_data.shape[0] if sensor_data.shape[0] < 50 else 50 # Take a look at the n highest sensor levels of the next day
 
 gmaps = googlemaps.Client(key=vars_dict["MAPS_KEY"])
 
-dist_file = 'data/distances.npy'
-n = 50 # Take a look at the n highest sensor levels of the next day
-time_per_working_day = 8 * 60 * 60 # 8 hours in seconds
-time_per_emptying = 30 * 60 # 30 minutes in seconds
-day = datetime(2023, 12, 4, 10, 00) # Date of prediction
-station_0 = (47.4156038, 9.3325804) # Assumption: Empyting starts and ends at Kehrichtheizkraftwerk St.Gallen
-empty_if_below = 0.4
-
 def get_distances(n):
-    distances = np.empty((n+1,n+1))
+    distances = np.zeros((n+1,n+1))
     for (node_from, node_to) in combinations(range(n), 2):
         sensor_from = sensor_data.iloc[node_from]
         sensor_to = sensor_data.iloc[node_to]
@@ -51,15 +54,14 @@ def get_distances(n):
             mode="driving", 
             language="de-CH",
             departure_time=day, # TODO: use specific date/time (also relevant for optimization)
-            traffic_model="optimistic"
+            traffic_model="pessimistic"
         )
         distance_in_seconds = matrix["rows"][0]["elements"][0]["duration"]["value"]
 
         # TODO: check if this makes sense:
         # Set weights of edges to inverse of level given by the sensor
-        # TODO: add criterium so that stations under 0.5 are not being emptied
-        cost_to = distance_in_seconds / sensor_to["level"] if sensor_to["level"] > empty_if_below else np.inf
-        cost_from = distance_in_seconds / sensor_from["level"] if sensor_from["level"] > empty_if_below else np.inf
+        cost_to = (distance_in_seconds / sensor_to["level"]) if sensor_to["level"] > empty_if_below else np.inf
+        cost_from = (distance_in_seconds / sensor_from["level"]) if sensor_from["level"] > empty_if_below else np.inf
 
         distances[node_from][node_to] = cost_to
         distances[node_to][node_from] = cost_from
@@ -101,11 +103,6 @@ else:
 
 levels = [sensor_data.iloc[i]["level"] for i in range(n)]
 
-print(distances)
-
-# TODO: always take nearest node and add it to the graph while needed_time < time_per_working_day
-# TODO: add daily weights if nodes have not been processed today
-
 needed_time = 0
 current_stop_idx = -1 #station_0 index
 visited_stops = []
@@ -133,9 +130,7 @@ print("Needed time:")
 print(needed_time)
 print("Trajectory:")
 for stop in visited_stops:
-    if stop == -1:
-        print(stop)
-    else:
+    if stop != -1:
         print(f"{stop} -> {levels[stop]}")
 
 unvisited_stops = np.setdiff1d(range(n), visited_stops)
@@ -166,6 +161,24 @@ if create_map:
         color="blue",
     ))
 
+    def add_min_max_markers():
+        all_coordinates = np.array([np.array(x.split(", "), dtype=np.float32) for x in sensor_data['geo_point_2d']])
+        min_lng = np.argmin(all_coordinates[:,0])
+        max_lng = np.argmax(all_coordinates[:,0])
+        min_lat = np.argmin(all_coordinates[:,1])
+        max_lat = np.argmax(all_coordinates[:,1])
+        coord_min_lng = all_coordinates[min_lng]
+        coord_max_lng = all_coordinates[max_lng]
+        coord_min_lat = all_coordinates[min_lat]
+        coord_max_lat = all_coordinates[max_lat]
+        markers.append(StaticMapMarker(
+            locations=[coord_min_lng, coord_max_lng, coord_min_lat, coord_max_lat],
+            size="tiny",
+            color="green",
+        ))
+    if show_min_max_markers:
+        add_min_max_markers()
+
     st_gallen = (47.4245, 9.3767)
     path = StaticMapPath(
         points=points,
@@ -173,12 +186,12 @@ if create_map:
         color="blue",
     )
     response = gmaps.static_map(
-        size=(400, 400),
+        size=(700, 350),
         zoom=12,
         center=st_gallen,
         maptype="satellite",
         format="png",
-        scale=2,
+        scale=4,
         path=path,
         markers=markers
     )
