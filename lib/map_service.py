@@ -1,10 +1,14 @@
-from googlemaps.maps import StaticMapPath
-from googlemaps.maps import StaticMapMarker
+'''
+Google Maps API library from:
+https://github.com/googlemaps/google-maps-services-python/blob/master/tests/test_distance_matrix.py
+'''
 import googlemaps
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from itertools import combinations
+from googlemaps.maps import StaticMapPath
+from googlemaps.maps import StaticMapMarker
 
 
 class MapService:

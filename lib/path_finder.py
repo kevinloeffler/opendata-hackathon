@@ -1,8 +1,5 @@
 '''
-Calculate optimal route to empty glass containers. Units is in seconds. 
-
-Google Maps API library from:
-https://github.com/googlemaps/google-maps-services-python/blob/master/tests/test_distance_matrix.py
+Calculate optimal route to empty glass containers. Units are in seconds. 
 '''
 from preprocessing import read_data
 from map_service import MapService
