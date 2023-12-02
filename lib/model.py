@@ -59,9 +59,12 @@ class BaseModel(ABC):
         return f'{p}-{index}'
 
     def load(self, path: str):
-        with open(f'{path}/model.json', 'r') as file:
-            json_model = file.read()
-        model = keras.models.model_from_json(json_model)
-        model.load_weights(f'{path}/model.h5')
-        self.model = model
-        print('model loaded from disk')
+        try:
+            with open(f'{path}/model.json', 'r') as file:
+                json_model = file.read()
+            model = keras.models.model_from_json(json_model)
+            model.load_weights(f'{path}/model.h5')
+            self.model = model
+            print('model loaded from disk')
+        except FileNotFoundError:
+            raise FileNotFoundError('No model found at:', path)
