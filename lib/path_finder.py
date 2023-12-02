@@ -41,33 +41,32 @@ class PathFinder:
         current_stop_idx = -1 #station_0 index
         visited_stops = [current_stop_idx]
         visited_locations = [self.station_0]
-        sensor_data_grouped = self.sensor_data.loc[self.sensor_data.groupby('sensor_id').date.idxmax()]
 
         # distances[current_stop_idx, 0] is the time needed from the station to station_0
         while (needed_time < (self.time_per_working_day - cost_matrix[current_stop_idx, -1] - self.time_per_emptying) and needed_capacity < self.capacity):
             if len(visited_stops) == self.n_sensors+1:
                 # all stops visited
                 break
-            location_information = {}
-            location_information["lat"] = self.sensor_data.iloc[current_stop_idx]["geo_point_2d"].split(", ")[0]
-            location_information["lng"] = self.sensor_data.iloc[current_stop_idx]["geo_point_2d"].split(", ")[1]
-            location_information["level"] = self.sensor_data.iloc[current_stop_idx]["level"]
-            location_information["sensor_id"] = self.sensor_data.iloc[current_stop_idx]["sensor_id"]
-            location_information["date"] = self.sensor_data.iloc[current_stop_idx]["date"]
-            location_information["type"] = self.sensor_data.iloc[current_stop_idx]["type"].split(", ")[0]
-
-            visited_locations.append(location_information)
 
             min_cost = np.min(np.delete(cost_matrix[current_stop_idx,:], visited_stops, axis=0)) # Min cost of unvisited stops
             for idx in np.argwhere(cost_matrix[current_stop_idx,:] == min_cost).ravel():
                 if idx not in visited_stops:
                     next_stop_idx = int(idx)
             
-            needed_capacity += sensor_data_grouped.iloc[next_stop_idx]["level"]
+            needed_capacity += self.sensor_data.iloc[next_stop_idx]["level"]
             actual_travel_time = self.dist_matrix[current_stop_idx][next_stop_idx]
             needed_time += actual_travel_time + self.time_per_emptying
             current_stop_idx = next_stop_idx
             visited_stops.append(next_stop_idx)
+            location_information = {}
+            location_information["lat"] = self.sensor_data.iloc[next_stop_idx]["geo_point_2d"].split(", ")[0]
+            location_information["lng"] = self.sensor_data.iloc[next_stop_idx]["geo_point_2d"].split(", ")[1]
+            location_information["level"] = self.sensor_data.iloc[next_stop_idx]["level"]
+            location_information["sensor_id"] = self.sensor_data.iloc[next_stop_idx]["sensor_id"]
+            location_information["date"] = self.sensor_data.iloc[next_stop_idx]["date"]
+            location_information["type"] = self.sensor_data.iloc[next_stop_idx]["type"].split(", ")[0]
+
+            visited_locations.append(location_information)
 
         visited_stops.append(-1) # End at station_0
         visited_locations.append(self.station_0)
@@ -75,13 +74,12 @@ class PathFinder:
 
         return visited_stops, needed_time, visited_locations, needed_capacity
 
-    def refine_path(self, starting_point, visited_stops):
+    def refine_path(self, starting_point_idx, visited_stops):
         # refine path using dijkstra
         unvisited = visited_stops[1:-1]
-        tour = [starting_point] # Start from the first point
-        unvisited.remove(starting_point)
-        sensor_data_grouped = self.sensor_data.loc[self.sensor_data.groupby('sensor_id').date.idxmax()]
-        locations = [sensor_data_grouped.iloc[starting_point]["geo_point_2d"].split(", ")]
+        tour = [visited_stops[starting_point_idx]] # Start from the first point
+        unvisited.remove(tour[-1])
+        locations = [self.sensor_data.iloc[tour[-1]]["geo_point_2d"].split(", ")]
 
         while unvisited:
             current_point = tour[-1]
@@ -90,7 +88,7 @@ class PathFinder:
                 if idx in unvisited:
                     nearest_point = int(idx)
             tour.append(nearest_point)
-            locations.append(sensor_data_grouped.iloc[nearest_point]["geo_point_2d"].split(", "))
+            locations.append(self.sensor_data.iloc[nearest_point]["geo_point_2d"].split(", "))
             unvisited.remove(nearest_point)
 
         return tour, locations
