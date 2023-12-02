@@ -12,13 +12,13 @@ from googlemaps.maps import StaticMapMarker
 
 
 class MapService:
-    def __init__(self, key: str, sensor_data: pd.DataFrame, day: datetime, n: int, station_0: tuple, empty_if_below: float):
+    def __init__(self, key: str, sensor_data: pd.DataFrame, day: datetime, n_sensors: int, station_0: tuple, no_empty_if_below: float):
         self.gmaps = googlemaps.Client(key=key)
         self.sensor_data = sensor_data
         self.day = day
-        self.n_sensors = n
+        self.n_sensors = n_sensors
         self.station_0 = station_0
-        self.empty_if_below = empty_if_below
+        self.no_empty_if_below = no_empty_if_below
 
     def get_distances(self):
         dist_matrix = np.zeros((self.n_sensors+1,self.n_sensors+1))
@@ -78,8 +78,8 @@ class MapService:
             sensor_to = self.sensor_data.iloc[node_to]
 
             # Set weights of edges to inverse of level given by the sensor
-            cost_matrix[node_from][node_to] = (dist_matrix[node_from][node_to] / sensor_to["level"]) if sensor_to["level"] > self.empty_if_below else np.inf
-            cost_matrix[node_to][node_from] = (dist_matrix[node_to][node_from] / sensor_from["level"]) if sensor_from["level"] > self.empty_if_below else np.inf
+            cost_matrix[node_from][node_to] = (dist_matrix[node_from][node_to] / sensor_to["level"]) if sensor_to["level"] > self.no_empty_if_below else np.inf
+            cost_matrix[node_to][node_from] = (dist_matrix[node_to][node_from] / sensor_from["level"]) if sensor_from["level"] > self.no_empty_if_below else np.inf
        
         for node_to in range(self.n_sensors):
             sensor_to = self.sensor_data.iloc[node_to]
