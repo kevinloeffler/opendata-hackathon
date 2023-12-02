@@ -2,6 +2,7 @@ import math
 
 from numpy import array
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 MAX_SENSOR_INPUT = 1600
 
@@ -26,6 +27,12 @@ def read_data(from_path: str, use_coordinates: bool = False):
     days_merged['level'] = days_merged['level'].apply(lambda level: normalize_data(level))  # normalise data
     return days_merged
 
+def data_split(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    train_data = data[0:int(len(data)*0.9)]
+    validate_data = data [int(len(data)*0.9):]
+    #train_data, validate_data = train_test_split(data, test_size=0.1, random_state=42)
+    
+    return  train_data, validate_data
 
 def _merge_days(dataframe: pd.DataFrame, use_coordinates):
     dataframe['date'] = pd.to_datetime(dataframe['date'], utc=True).dt.date
