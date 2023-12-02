@@ -1,7 +1,6 @@
 '''
 Calculate optimal route to empty glass containers. Units are in seconds. 
 '''
-from preprocessing import read_data
 from map_service import MapService
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ map_file = 'map-output.png'
 map_file_refined = 'map-output-refined.png'
 
 class PathFinder:
-    capacity = 5.5 - 1 # size of trough minus 1 container
+    capacity = 10 - 1 # size of trough minus 1 container
     time_per_working_day = 6 * 60 * 60 # 6 hours in seconds divided by 3 because only 40/120 containers have sensors
     time_per_emptying = 15 * 60 # 15 minutes in seconds, 5 minutes per container
 

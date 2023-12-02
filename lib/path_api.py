@@ -54,14 +54,18 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
         map_service = MapService(vars_dict["MAPS_KEY"], sensor_data, n_sensors, station_0, no_empty_if_below)
         path_finder = PathFinder(map_service, sensor_data, station_0, n_sensors)
 
-        _, needed_time, visited_stations, needed_capacity = path_finder.find_path()
+        visited_stops, needed_time, visited_stations, needed_capacity = path_finder.find_path()
         visited_stations_by_id = [x["sensor_id"] for x in visited_stations[1:-1]]
         print(needed_capacity)
         print(visited_stations_by_id)
+        most_left_point = np.argmin([float(x["lat"]) for x in visited_stations[1:-1]])
+        tour, locations = path_finder.refine_path(most_left_point+1, visited_stops) # +1 because visited_stations[1:-1]
+        locations = [station_0] + locations + [station_0]
+        print(tour)
 
         all_needed_time.append(needed_time)
         all_needed_capacity.append(needed_capacity)
-        all_visited_locations.append(visited_stations)
+        all_visited_locations.append(locations)
 
         # calculate predictions for next iteration
         for sensor_id, values_raw in list(sensor_data_raw.groupby('sensor_id')):
