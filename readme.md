@@ -1,18 +1,18 @@
 # Open Data Hack 2023
 
-**Goal:** Use an AI model to predict the fill levels of recycling stations in St. Gallen
-and create a pathfinding algorithm that finds the ideal routes for city employees.
+**Goal:** Use an LSTM AI model to predict the fill levels of recycling stations in St. Gallen
+and create a pathfinding algorithm that finds the ideal routes for city employees, for the next week.
 
 ### Components
 
 1) AI model that predicts future fill levels based on historic data
-2) Pathfinding algorithm that finds the optimal order of recycling stations based on the predicted fill levels
-3) Optional: Visualise optimal route with a web app or similar
+2) Pathfinding algorithm that finds the optimal order of recycling stations based on the predicted fill levels and location
+3) Visualise optimal route with a web app
 
 ### Setup
 
 Download the file [here](https://www.daten.stadt.sg.ch/explore/dataset/fullstandssensoren-sammelstellen-stadt-stgallen/export/?disjunctive.name&disjunctive.tags&sort=measured_at) 
-and safe it at `data/fill-level.csv` or use the `download-data.sh` script.
+and safe it at `data/fill-level.csv` or use the `download-data.sh` script. Or similar
 
 #### Update 
 The API has changed. The API has been split up in 3 parts for each glass type.
