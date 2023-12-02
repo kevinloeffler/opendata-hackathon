@@ -52,17 +52,11 @@ const GlassMarker = (props) => {
       <TableContainer style={{ marginTop: '1em' }} component={Paper}>
         <Table sx={{ minWidth: 200 }} aria-label="simple table">
           <TableBody>
-            <TableRow key={1} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-              <TableCell component="th" scope="row">
-                prediction (datum)
-              </TableCell>
-              <TableCell align="right">{props.prediction ? props.prediction : 0}</TableCell>
-
-            </TableRow>
+            
 
             <TableRow key={2} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
               <TableCell component="th" scope="row">
-                fill level
+                last fill level
               </TableCell>
               <TableCell align="right">{parseFloat(props.level.toFixed(4)) * 100}%</TableCell>
 
