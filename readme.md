@@ -14,6 +14,13 @@ and create a pathfinding algorithm that finds the ideal routes for city employee
 Download the file [here](https://www.daten.stadt.sg.ch/explore/dataset/fullstandssensoren-sammelstellen-stadt-stgallen/export/?disjunctive.name&disjunctive.tags&sort=measured_at) 
 and safe it at `data/fill-level.csv` or use the `download-data.sh` script.
 
+#### Update 
+The API has changed. The API has been split up in 3 parts for each glass type.
+The new API is documented as follows:
+- [Füllstandsensoren Glassammelstellen (Weissglas)](https://www.daten.stadt.sg.ch/explore/dataset/fuellstandsensoren-glassammelstellen-weissglas/table/?disjunctive.device_id&disjunctive.name)
+- [Füllstandsensoren Glassammelstellen (Grünglas)](https://www.daten.stadt.sg.ch/explore/dataset/fuellstandsensoren-glassammelstellen-gruenglas/table/?disjunctive.device_id&disjunctive.name)
+- [Füllstandsensoren Glassammelstellen (Braunglas)](https://www.daten.stadt.sg.ch/explore/dataset/fuellstandsensoren-glassammelstellen-braunglas/table/?disjunctive.device_id&disjunctive.name)
+
 ### API
 
 Use the generate_dummy_data method to receive random sensor values. The model should return the prediction the same way.

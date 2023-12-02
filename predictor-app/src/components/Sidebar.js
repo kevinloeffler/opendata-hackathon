@@ -9,10 +9,12 @@ import Checkbox from '@mui/material/Checkbox';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import Button from '@mui/material/Button';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import dayjs from 'dayjs';
 import LinearProgress from '@mui/material/LinearProgress';
+import Badge from '@mui/material/Badge';
 
 const marks = [
   {
@@ -54,12 +56,54 @@ const Sidebar = () => {
   const { brown, white, green, selectedDate, predictionRunning, predictionDone } = state;
   const error = [brown, white, green].filter((v) => v).length < 1;
 
+  const highlightedDays = [];
+  for (let i = 0; i < 6; i++) {
+    highlightedDays.push(dayjs().add(i, 'day').date());
+  }
+
+  function AvailableDay(props) {
+    const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
+  
+    const isSelected =
+      !props.outsideCurrentMonth && highlightedDays.indexOf(props.day.date()) >= 0;
+  
+    return (
+      <Badge
+        key={props.day.toString()}
+        overlap="circular"
+        badgeContent={isSelected ? '✅' : undefined}
+      >
+        <PickersDay {...other} outsideCurrentMonth={outsideCurrentMonth} day={day} />
+      </Badge>
+    );
+  }
+
   return (
     <Grid container spacing={1} padding={3}>
       <Grid item xs={12} sm={6}>
-        <b>Nächste Leerung</b>
+        <b>Nächste Leerung {selectedDate.format('DD.MM.YYYY')}</b>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DateCalendar defaultValue={dayjs()} />
+          <DateCalendar defaultValue={dayjs()}
+            disablePast={true}
+            
+            onChange={(newValue) => {
+              if (newValue > dayjs().add(5, 'day')) {
+                console.log('too far in the future');
+              }
+              setState({ ...state, selectedDate: newValue });
+            }}
+
+            slots={{
+              day: AvailableDay,
+            }}
+
+            slotProps={{
+              day: {
+                highlightedDays,
+              }
+            }}
+          
+          />
         </LocalizationProvider>
       </Grid>
 

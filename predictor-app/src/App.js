@@ -5,7 +5,7 @@ import AppBar from '@mui/material/AppBar';
 import CssBaseline from '@mui/material/CssBaseline';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import Sidebar from './Sidebar'
+import Sidebar from './components/Sidebar'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import GlassCollectionMap from './components/GlassCollectionMap';
 

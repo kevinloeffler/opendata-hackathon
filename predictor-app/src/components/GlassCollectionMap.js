@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useLoadScript, DirectionsRenderer } from '@react-google-maps/api';
-import GlassMarker from '../GlassMarker';
+import GlassMarker from './GlassMarker';
 
 const libraries = ['places'];
 const mapContainerStyle = {
