@@ -12,15 +12,16 @@ from googlemaps.maps import StaticMapMarker
 
 
 class MapService:
-    def __init__(self, key: str, sensor_data: pd.DataFrame, day: datetime, n_sensors: int, station_0: tuple, no_empty_if_below: float):
+    def __init__(self, key: str, sensor_data: pd.DataFrame, n_sensors: int, station_0: tuple, no_empty_if_below: float):
         self.gmaps = googlemaps.Client(key=key)
         self.sensor_data = sensor_data
-        self.day = day
         self.n_sensors = n_sensors
         self.station_0 = station_0
         self.no_empty_if_below = no_empty_if_below
 
     def get_distances(self):
+        day = datetime(2023, 12, 4, 10, 00) # Date of prediction TODO: how to make this variable?
+
         dist_matrix = np.zeros((self.n_sensors+1,self.n_sensors+1))
         for (node_from, node_to) in combinations(range(self.n_sensors), 2):
             sensor_from = self.sensor_data.iloc[node_from]
@@ -37,7 +38,7 @@ class MapService:
                 destinations, 
                 mode="driving", 
                 language="de-CH",
-                departure_time=self.day, # TODO: use specific date/time (also relevant for optimization)
+                departure_time=day, # TODO: use specific date/time? (also relevant for optimization)
                 traffic_model="pessimistic"
             )
             distance_in_seconds = matrix["rows"][0]["elements"][0]["duration"]["value"]
@@ -60,7 +61,7 @@ class MapService:
                 destinations, 
                 mode="driving", 
                 language="de-CH",
-                departure_time=self.day.replace(hour=17), # We go home at 17:00 :)
+                departure_time=day.replace(hour=17), # We go home at 17:00 :)
                 traffic_model="pessimistic"
             )
             distance_in_seconds = matrix["rows"][0]["elements"][0]["duration"]["value"]
