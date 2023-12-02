@@ -1,3 +1,4 @@
 data/
 .env
 map-output.png
+__pycache__/
