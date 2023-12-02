@@ -26,3 +26,6 @@ class VanillaLSTM(BaseModel):
     def predict(self, data):
         input_data = data.reshape((1, self.step_size, 1))
         return self.model.predict(input_data)[0]
+    
+    def summary(self):
+        self.model.summary()
