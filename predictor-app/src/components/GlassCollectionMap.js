@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useLoadScript, DirectionsRenderer } from '@react-google-maps/api';
 import GlassMarker from './GlassMarker';
+import {  useSelector } from "react-redux";
+
 
 const libraries = ['places'];
 const mapContainerStyle = {
@@ -15,7 +17,17 @@ const center = {
 };
 const zoom = 13;
 
-const GlassCollectionMap = () => {
+const GlassCollectionMap = ({ key }) => {
+  useEffect(() => {
+    // This effect will run whenever the key prop changes
+    console.log('ChildComponent has been re-rendered with a new key:', key);
+
+    // Add any logic here to update the component with new data
+  }, [key]);
+
+  const sensors = useSelector((state) => state.sensor.sensors);
+
+  console.log(sensors);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -46,7 +58,7 @@ const GlassCollectionMap = () => {
         }
       );
     }
-  }, [isLoaded, origin, travelMode]);
+  }, [destination.lat, destination.lng, isLoaded, origin, travelMode]);
 
   if (loadError) {
     return <div>Error loading maps</div>;
@@ -77,11 +89,20 @@ const GlassCollectionMap = () => {
       center={center}
     >
 
-      <GlassMarker position={center} title={'test !!!'} />
-
-      <GlassMarker position={destination} title={'Test 2'} />
-      
-      {directions}
+      { sensors ? 
+        sensors.map((sensor, index) => (
+          <GlassMarker
+            key={index}
+            title={sensor.sensor_id}
+            position={{ lat: Number(sensor.geo_point_2d.split(',')[0]), 
+                        lng:  Number(sensor.geo_point_2d.split(',')[1]) }}
+            prediction={sensor.prediction}
+            type={sensor.type}
+            date={sensor.date}
+            level={sensor.level}
+          />
+        )) : null
+      }
 
     </GoogleMap>
   );

@@ -11,10 +11,12 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import Button from '@mui/material/Button';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import dayjs from 'dayjs';
 import LinearProgress from '@mui/material/LinearProgress';
 import Badge from '@mui/material/Badge';
+import { predict } from '../api';
 
 const marks = [
   {
@@ -35,6 +37,25 @@ const marks = [
   },
 ];
 
+const durationMarks = [
+  {
+    value: 1,
+    label: '1h',
+  },
+  {
+    value: 2,
+    label: '2h',
+  },
+  {
+    value: 3,
+    label: '3h',
+  },
+  {
+    value: 8,
+    label: '8h',
+  },
+];
+
 const Sidebar = () => {
 
   const [state, setState] = React.useState({
@@ -43,7 +64,7 @@ const Sidebar = () => {
     green: true,
     predictionRunning: false,
     predictionDone: false,
-    selectedDate: dayjs(),
+    selectedDate: dayjs().add(1, 'day'),
   });
 
   const handleChange = (event) => {
@@ -57,16 +78,16 @@ const Sidebar = () => {
   const error = [brown, white, green].filter((v) => v).length < 1;
 
   const highlightedDays = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 1; i < 6; i++) {
     highlightedDays.push(dayjs().add(i, 'day').date());
   }
 
   function AvailableDay(props) {
     const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
-  
+
     const isSelected =
       !props.outsideCurrentMonth && highlightedDays.indexOf(props.day.date()) >= 0;
-  
+
     return (
       <Badge
         key={props.day.toString()}
@@ -79,109 +100,148 @@ const Sidebar = () => {
   }
 
   return (
-    <Grid container spacing={1} padding={3}>
-      <Grid item xs={12} sm={6}>
-        <b>Nächste Leerung {selectedDate.format('DD.MM.YYYY')}</b>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DateCalendar defaultValue={dayjs()}
-            disablePast={true}
-            
-            onChange={(newValue) => {
-              if (newValue > dayjs().add(5, 'day')) {
-                console.log('too far in the future');
-              }
-              setState({ ...state, selectedDate: newValue });
-            }}
+    <div>
+      {
+        predictionDone ?
 
-            slots={{
-              day: AvailableDay,
-            }}
+          <Grid container spacing={1} padding={3}>
+            <Grid item xs={12}>
+              <b>Nächste Leerung {selectedDate.format('DD.MM.YYYY')}</b>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DateCalendar defaultValue={dayjs().add(1, 'day')}
+                  disablePast={true}
 
-            slotProps={{
-              day: {
-                highlightedDays,
-              }
-            }}
-          
-          />
-        </LocalizationProvider>
-      </Grid>
+                  onChange={(newValue) => {
+                    if (newValue > dayjs().add(5, 'day')) {
+                      console.log('too far in the future');
+                    }
+                    setState({ ...state, selectedDate: newValue });
+                  }}
 
-      <Grid item xs={12}>
-        <b>Leeren ab Füllstand</b>
-        <Slider
-          aria-label="Always visible"
-          defaultValue={80}
-          getAriaValueText={percentValueText}
-          step={10}
-          marks={marks}
-          valueLabelDisplay="on"
-        />
-      </Grid>
+                  slots={{
+                    day: AvailableDay,
+                  }}
 
-      <Grid item xs={12}>
-        <b>Glasarten</b>
-        <FormControl
-          required
-          error={error}
-          component="fieldset"
-          sx={{ m: 3 }}
-          variant="standard"
-        >
-          <FormLabel component="legend">Glas auswählen</FormLabel>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Checkbox checked={green} onChange={handleChange} name="green" />
-              }
-              label="Grün"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox checked={brown} onChange={handleChange} name="brown" />
-              }
-              label="Braun"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox checked={white} onChange={handleChange} name="white" />
-              }
-              label="Weiss"
-            />
-          </FormGroup>
-          <FormHelperText>Bitte mindestens 1 Glasart auswählen</FormHelperText>
-        </FormControl>
-      </Grid>
+                  slotProps={{
+                    day: {
+                      highlightedDays,
+                    }
+                  }}
 
-      <Grid item xs={12}>
-        <FormControlLabel
-          control={<Checkbox color="secondary" name="showRoute" value="yes" />}
-          label="Route anzeigen"
-        />
-      </Grid>
+                />
+              </LocalizationProvider>
+            </Grid>
 
-      <Grid justifyContent="flex-end" item xs={12}>
+            <Grid item xs={12}>
+                <b>Informationen zur Leerung</b>
+            </Grid>
 
-        { predictionRunning ? 
-        
-        <div>Predicting glass collection...
-        <LinearProgress /></div> :
+            <Grid item xs={12}>
+                <Button variant="contained" fullWidth endIcon={<ArrowBackIcon />} onClick={handleBack}>
+                  Zurück
+                </Button>
+            </Grid>
 
-        <Button variant="contained" fullWidth endIcon={<FunctionsIcon />} onClick={handlePrediction}>
-          Predict
-        </Button>}
-      
-      </Grid>
+          </Grid>
 
-      <Grid justifyContent="flex-end" item xs={12}>
-         
-        {predictionDone ? <span>Prediction for {selectedDate.format('DD.MM.YYYY')}</span> : null}
-      </Grid>
-    </Grid>
+          :
+
+          <Grid container spacing={1} padding={3}>
+            <Grid item xs={12}>
+              <h3>Nächste Leerungen Vorhersagen</h3>
+              <b>Leeren ab Füllstand</b>
+              <Slider
+                aria-label="Always visible"
+                defaultValue={80}
+                getAriaValueText={percentValueText}
+                step={10}
+                marks={marks}
+                valueLabelDisplay="on"
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <b>Dauer der Tour</b>
+              <Slider
+                aria-label="Always visible"
+                defaultValue={6}
+                getAriaValueText={percentValueText}
+                step={1}
+                marks={durationMarks}
+                valueLabelDisplay="on"
+                max={8}
+                min={0}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <b>Glasarten</b>
+              <FormControl
+                required
+                error={error}
+                component="fieldset"
+                sx={{ m: 3 }}
+                variant="standard"
+              >
+                <FormLabel component="legend">Glas auswählen</FormLabel>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={green} onChange={handleChange} name="green" />
+                    }
+                    label="Grün"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={brown} onChange={handleChange} name="brown" />
+                    }
+                    label="Braun"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={white} onChange={handleChange} name="white" />
+                    }
+                    label="Weiss"
+                  />
+                </FormGroup>
+                <FormHelperText>Bitte mindestens 1 Glasart auswählen</FormHelperText>
+              </FormControl>
+            </Grid>
+
+            <Grid justifyContent="flex-end" item xs={12}>
+
+              {predictionRunning ?
+
+                <div>Glas Sammlung wird berechnet...
+                  <LinearProgress /></div> :
+
+                <Button variant="contained" fullWidth endIcon={<FunctionsIcon />} onClick={handlePrediction}>
+                  Predict
+                </Button>}
+
+            </Grid>
+
+            <Grid justifyContent="flex-end" item xs={12}>
+
+              {predictionDone ? <span>Prediction for {selectedDate.format('DD.MM.YYYY')}</span> : null}
+            </Grid>
+          </Grid>
+      }
+    </div>
   );
 
   function handlePrediction() {
     setState({ ...state, predictionRunning: true });
+
+    predict()
+      .then((result) => {
+        setState({ ...state, predictionRunning: false, predictionDone: true, predictionResult: result });
+      })
+      .catch((ex) => console.error(ex));
+  }
+
+  function handleBack() {
+    setState({ ...state, predictionDone: false });
   }
 
   function percentValueText(value) {

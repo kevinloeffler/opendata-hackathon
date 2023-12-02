@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import AppBar from '@mui/material/AppBar';
@@ -8,6 +8,10 @@ import Typography from '@mui/material/Typography';
 import Sidebar from './components/Sidebar'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import GlassCollectionMap from './components/GlassCollectionMap';
+import { useDispatch, useSelector } from "react-redux";
+import { setSensors } from './redux/sensorSlice';
+import { getSensors } from './api';
+import Avatar from '@mui/material/Avatar';
 
 // Create a custom theme with the desired primary color
 const theme = createTheme({
@@ -21,6 +25,22 @@ const theme = createTheme({
 const drawerWidth = 360;
 
 const App = () => {
+  const dispatch = useDispatch();
+  const sensors = useSelector((state) => state.sensor.sensors);
+  
+  const [keyForChild, setKeyForChild] = useState(1);
+
+  useEffect(() => {
+    if (sensors === undefined || sensors.length === 0) {
+      getSensors()
+                .then((result) => {
+                  console.log(result); 
+                  dispatch(setSensors(result));
+                })
+                .then(() => setKeyForChild((prevKey) => prevKey + 1))
+                .catch((ex) => console.error(ex));
+    }
+  }, [dispatch, sensors]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -28,8 +48,9 @@ const App = () => {
         <CssBaseline />
         <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Toolbar>
+            <Avatar alt="Glass Collection" src="bottle.png" />
             <Typography variant="h6" noWrap component="div">
-              SG - Glass Collection Predictor
+             SG - Glass Collection Predictor
             </Typography>
           </Toolbar>
         </AppBar>
@@ -51,7 +72,7 @@ const App = () => {
         <Box component="main" sx={{ flexGrow: 1 }}>
           <Toolbar />
 
-            <GlassCollectionMap />
+            <GlassCollectionMap key={keyForChild} sensors={sensors} />
 
         </Box>
       </Box>

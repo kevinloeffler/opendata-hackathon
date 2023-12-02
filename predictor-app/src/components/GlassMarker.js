@@ -56,7 +56,7 @@ const GlassMarker = (props) => {
               <TableCell component="th" scope="row">
                 prediction (datum)
               </TableCell>
-              <TableCell align="right">1111</TableCell>
+              <TableCell align="right">{props.prediction ? props.prediction : 0}</TableCell>
 
             </TableRow>
 
@@ -64,7 +64,7 @@ const GlassMarker = (props) => {
               <TableCell component="th" scope="row">
                 fill level
               </TableCell>
-              <TableCell align="right">50%</TableCell>
+              <TableCell align="right">{parseFloat(props.level.toFixed(4)) * 100}%</TableCell>
 
             </TableRow>
 
@@ -72,7 +72,7 @@ const GlassMarker = (props) => {
               <TableCell component="th" scope="row">
                 glass type
               </TableCell>
-              <TableCell align="right">green</TableCell>
+              <TableCell align="right">{props.type}</TableCell>
 
             </TableRow>
 
@@ -80,7 +80,7 @@ const GlassMarker = (props) => {
               <TableCell component="th" scope="row">
                 last emptying
               </TableCell>
-              <TableCell align="right">20.11.2023</TableCell>
+              <TableCell align="right">{props.date}</TableCell>
 
             </TableRow>
           </TableBody>

@@ -1,26 +1,22 @@
 /* Use the exported functions to call the API.
  * If necessary, adjust the backend address below:
  */
-const backend = "http://localhost:8080";
+const backend = "http://localhost:5000";
 
 export function predict() {
   return postJson("/predict").then(parseJSON);
 }
 
-export function getGlassContainers() {
-  return getJson("/glasscontainers").then(parseJSON);
+export function getPath(params) {
+  return getJson("/path", params).then(parseJSON);
 }
 
-export function getGlassContainer(id) {
-  return getJson("/glasscontainers/" + id).then(parseJSON);
+export function getSensors() {
+  return getJson("/sensors").then(parseJSON);
 }
 
-export function getGlassContainerHistory(id) {
-  return getJson("/glasscontainers/" + id + "/history").then(parseJSON);
-}
-
-export function getGlassContainerPrediction(id) {
-  return getJson("/glasscontainers/" + id + "/prediction").then(parseJSON);
+export function getSensorData(sensorId) {
+  return getJson(`/sensors/${sensorId}`).then(parseJSON);
 }
 
 // helper functions
@@ -33,6 +29,17 @@ function checkStatus(response) {
     throw error;
   }
 }
+
+function getJson(endpoint, params) {
+  return fetch(`${backend}${endpoint}`, {
+    params: params,
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  }).then(checkStatus);
+}
+
 
 function parseJSON(response) {
   return response.json();
