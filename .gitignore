@@ -6,3 +6,4 @@ __pycache__/
 todo
 trained_models/
 .idea
+/nico-env/
