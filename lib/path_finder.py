@@ -16,7 +16,7 @@ map_file_refined = 'map-output-refined.png'
 
 class PathFinder:
     time_per_working_day = 8 * 60 * 60 # 8 hours in seconds
-    time_per_emptying = 15 * 60 # 15 minutes in seconds
+    time_per_emptying = 15 * 60 # 15 minutes in seconds, 5 minutes per container
 
     def __init__(self,  map_service: MapService, sensor_data: pd.DataFrame, station_0: tuple, n_sensors: int):
         self.sensor_data = sensor_data
