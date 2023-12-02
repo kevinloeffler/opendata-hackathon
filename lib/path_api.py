@@ -8,7 +8,7 @@ from path_finder import PathFinder
 import numpy as np
 import pandas as pd
 
-data_file = 'data/daysMerged.csv'
+data_file = 'data/days_merged.csv'
 
 with open('.env', 'r') as fh:
     vars_dict = dict(
@@ -71,14 +71,18 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
                 last_5_values = np.append(last_5_values, all_predictions[sensor_id])
             else:
                 all_predictions[sensor_id] = []
+            for j in range(1, len(last_5_values)):
+                if (last_5_values[j] - last_5_values[j-1]) < -0.02:
+                    # Data has been emtpied - set data before jump to 0
+                    last_5_values[:j] = 0
             all_predictions[sensor_id].append(model.predict(last_5_values).ravel()[0])
 
         # add predictions to dataset for next iteration
         pred_date = datetime.date.today() + datetime.timedelta(days=i)
         for sensor_id, predictions in all_predictions.items():
-            has_been_emptied = np.in1d(sensor_id, visited_stations_by_id)[0]
-            if has_been_emptied:
-                predictions[-1] = 0 # updates value in all_predictions
+            #has_been_emptied = np.in1d(sensor_id, visited_stations_by_id)[0]
+            #if has_been_emptied:
+            #    predictions[-1] = 0 # updates value in all_predictions
 
             sensor = sensor_data[sensor_data["sensor_id"] == sensor_id].iloc[0]
             new_entry = pd.Series({
@@ -91,6 +95,8 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
             sensor_data_copy.loc[len(sensor_data_copy)] = new_entry
 
     return all_needed_time, all_needed_capacity, all_visited_locations
+
+#get_next_n_days(n_days, no_empty_if_below)
 
 @path_api.route("", methods=['GET'])
 def get_path():

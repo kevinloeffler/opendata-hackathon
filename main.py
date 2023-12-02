@@ -25,7 +25,7 @@ test_x, test_y = sequence_data(test, STEP_SIZE)
 # EXAMPLE: Create model
 
 vanilla_lstm_model = VanillaLSTM(step_size=STEP_SIZE)
-vanilla_lstm_model.train(train_x, train_y, 10, 'trained_models/vanilla-lstm')
+vanilla_lstm_model.train(train_x, train_y, 3, 'trained_models/vanilla-lstm')
 accuracy = vanilla_lstm_model.test(test_x, test_y)
 print('accuracy:', round(100 * accuracy, 3), '%')
 
