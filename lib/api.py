@@ -13,5 +13,16 @@ app = Flask(__name__)
 app.register_blueprint(sensor_api, url_prefix='/sensors')
 app.register_blueprint(path_api, url_prefix='/path')
 
+
+# put this sippet ahead of all your bluprints
+# blueprint can also be app~~
+@app.after_request
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    # Other headers can be added here if needed
+    return response
+
+
 if __name__ == '__main__':
     app.run(debug=True)
