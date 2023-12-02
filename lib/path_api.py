@@ -8,7 +8,7 @@ from path_finder import PathFinder
 import numpy as np
 import pandas as pd
 
-data_file = 'data/fill-level.csv'
+data_file = 'data/daysMerged.csv'
 
 with open('.env', 'r') as fh:
     vars_dict = dict(
@@ -18,7 +18,11 @@ with open('.env', 'r') as fh:
 
 n_sensors = 42 # Number of sensors in St. Gallen
 station_0 = (47.4156038, 9.3325804) # Assumption: Empyting starts and ends at Kehrichtheizkraftwerk St.Gallen
-sensor_data_raw = read_data(data_file, use_coordinates=True)
+
+columns = [
+    'sensor_id','date','geo_point_2d','level','type'
+]
+sensor_data_raw = pd.read_csv(data_file, delimiter=',', usecols=columns)
 
 path_api = Blueprint('path_api', __name__)
 
@@ -79,7 +83,7 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
             sensor = sensor_data[sensor_data["sensor_id"] == sensor_id].iloc[0]
             new_entry = pd.Series({
                 'sensor_id': sensor_id, 
-                'date': pred_date, 
+                'date': pred_date.strftime('%Y-%m-%d'), 
                 'geo_point_2d': sensor["geo_point_2d"],
                 'level': predictions[-1], # has been emptied
                 'type': sensor["type"]
@@ -87,7 +91,6 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
             sensor_data_copy.loc[len(sensor_data_copy)] = new_entry
 
     return all_needed_time, all_needed_capacity, all_visited_locations
-    
 
 @path_api.route("", methods=['GET'])
 def get_path():
