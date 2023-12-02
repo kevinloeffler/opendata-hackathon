@@ -33,10 +33,12 @@ map_service = MapService(vars_dict["MAPS_KEY"], sensor_data, day, n, station_0, 
 # distances matrix: row=from, column=to
 if os.path.isfile(dist_file):
     # Reuse distances to reduce api calls
-    distances = np.load(dist_file)
+    dist_matrix = np.load(dist_file)
 else:
-    distances = map_service.get_distances()
-    np.save(dist_file, distances)
+    dist_matrix = map_service.get_distances()
+    np.save(dist_file, dist_matrix)
+
+cost_matrix = map_service.get_costs(dist_matrix)
 
 levels = [sensor_data.iloc[i]["level"] for i in range(n)]
 
@@ -45,14 +47,14 @@ current_stop_idx = -1 #station_0 index
 visited_stops = []
 
 # distances[current_stop_idx, 0] is the time needed from the station to station_0
-while (needed_time < (time_per_working_day - distances[current_stop_idx, -1] - time_per_emptying)):
+while (needed_time < (time_per_working_day - cost_matrix[current_stop_idx, -1] - time_per_emptying)):
     visited_stops.append(current_stop_idx)
 
     if len(visited_stops) == n+1:
         # all stops visited
         break
-    min_cost = np.min(np.delete(distances[current_stop_idx,:], visited_stops, axis=0)) # Min cost of unvisited stops
-    for idx in np.argwhere(distances[current_stop_idx,:] == min_cost).ravel():
+    min_cost = np.min(np.delete(cost_matrix[current_stop_idx,:], visited_stops, axis=0)) # Min cost of unvisited stops
+    for idx in np.argwhere(cost_matrix[current_stop_idx,:] == min_cost).ravel():
         if idx not in visited_stops:
             next_stop_idx = idx
     
@@ -61,7 +63,7 @@ while (needed_time < (time_per_working_day - distances[current_stop_idx, -1] - t
     current_stop_idx = next_stop_idx
 
 visited_stops.append(-1) # End at station_0
-needed_time += distances[current_stop_idx, -1] # Add time to go to station_0
+needed_time += cost_matrix[current_stop_idx, -1] # Add time to go to station_0
     
 print("Needed time:")
 print(needed_time)
