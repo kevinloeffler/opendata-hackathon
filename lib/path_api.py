@@ -1,16 +1,10 @@
-'''
-Run from root directory:
-flask --app lib/path-api run
-'''
-from flask import Flask
-from flask import jsonify
+# path_api.py
+from flask import Blueprint, jsonify, request, Response
 import json
 from preprocessing import read_data
 from map_service import MapService
 from path_finder import PathFinder
-from flask import Response
 
-app = Flask(__name__)
 data_file = 'data/fill-level.csv'
 
 with open('.env', 'r') as fh:
@@ -20,15 +14,21 @@ with open('.env', 'r') as fh:
     )
 
 n_sensors = 42 # Number of sensors in St. Gallen
-no_empty_if_below = 0.4
 station_0 = (47.4156038, 9.3325804) # Assumption: Empyting starts and ends at Kehrichtheizkraftwerk St.Gallen
 sensor_data = read_data(data_file, use_coordinates=True)
 sensor_data = sensor_data.loc[sensor_data.groupby('sensor_id').date.idxmax()] # Get sensor_id only once
 
-map_service = MapService(vars_dict["MAPS_KEY"], sensor_data, n_sensors, station_0, no_empty_if_below)
-path_finder = PathFinder(map_service, sensor_data, station_0, n_sensors)
+path_api = Blueprint('path_api', __name__)
 
-@app.route("/path", methods=['GET'])
+
+@path_api.route("", methods=['GET'])
 def get_path():
+    selected_date = request.args.get('date')
+    no_empty_if_below = float(request.args.get('no_empty_if_below')) if request.args.get('no_empty_if_below') is not None else 0.4
+    glass_type_list = request.args.get('glass_type_list').split(",") if request.args.get('glass_type_list') is not None else None
+
+    map_service = MapService(vars_dict["MAPS_KEY"], sensor_data, n_sensors, station_0, no_empty_if_below)
+    path_finder = PathFinder(map_service, sensor_data, station_0, n_sensors)
+
     _, needed_time, visited_locations = path_finder.find_path()
     return jsonify({"visited_locations": visited_locations, "needed_time": needed_time})

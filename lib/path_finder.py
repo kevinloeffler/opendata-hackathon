@@ -16,7 +16,7 @@ map_file_refined = 'map-output-refined.png'
 
 class PathFinder:
     time_per_working_day = 8 * 60 * 60 # 8 hours in seconds
-    time_per_emptying = 15 * 60 # 15 minutes in seconds, 5 minutes per container
+    time_per_emptying = 60 * 60 # 15 minutes in seconds, 5 minutes per container
 
     def __init__(self,  map_service: MapService, sensor_data: pd.DataFrame, station_0: tuple, n_sensors: int):
         self.sensor_data = sensor_data
@@ -43,7 +43,16 @@ class PathFinder:
         # distances[current_stop_idx, 0] is the time needed from the station to station_0
         while (needed_time < (self.time_per_working_day - cost_matrix[current_stop_idx, -1] - self.time_per_emptying)):
             visited_stops.append(current_stop_idx)
-            visited_locations.append(self.sensor_data.iloc[current_stop_idx]["geo_point_2d"].split(", "))
+
+            location_information = {}
+            location_information["lat"] = self.sensor_data.iloc[current_stop_idx]["geo_point_2d"].split(", ")[0]
+            location_information["lng"] = self.sensor_data.iloc[current_stop_idx]["geo_point_2d"].split(", ")[1]
+            location_information["level"] = self.sensor_data.iloc[current_stop_idx]["level"]
+            location_information["sensor_id"] = self.sensor_data.iloc[current_stop_idx]["sensor_id"]
+            location_information["date"] = self.sensor_data.iloc[current_stop_idx]["date"]
+            location_information["type"] = self.sensor_data.iloc[current_stop_idx]["type"].split(", ")[0]
+
+            visited_locations.append(location_information)
 
             if len(visited_stops) == self.n_sensors+1:
                 # all stops visited
