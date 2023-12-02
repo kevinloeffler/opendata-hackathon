@@ -1,6 +1,6 @@
 import keras
 
-from lib.model import BaseModel
+from model import BaseModel
 
 # the model expects training data in the shape: [samples, step size, features]
 
@@ -25,7 +25,7 @@ class VanillaLSTM(BaseModel):
 
     def predict(self, data):
         input_data = data.reshape((1, self.step_size, 1))
-        return self.model.predict(input_data)[0]
+        return self.model.predict(input_data, verbose=0)[0]
     
     def summary(self):
         self.model.summary()
