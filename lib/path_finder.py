@@ -5,7 +5,6 @@ from preprocessing import read_data
 from map_service import MapService
 import numpy as np
 import pandas as pd
-from datetime import datetime
 import os
 
 create_map = True
@@ -16,7 +15,7 @@ map_file = 'map-output.png'
 
 class PathFinder:
     time_per_working_day = 8 * 60 * 60 # 8 hours in seconds
-    time_per_emptying = 30 * 60 # 15 minutes in seconds
+    time_per_emptying = 5 * 60 # 5 minutes in seconds
 
     def __init__(self,  map_service: MapService, sensor_data: pd.DataFrame, station_0: tuple, n_sensors: int):
         self.sensor_data = sensor_data
@@ -67,14 +66,13 @@ if __name__ == "__main__":
             for line in fh.readlines() if not line.startswith('#')
         )
     
-    day = datetime(2023, 12, 4, 10, 00) # Date of prediction
     n_sensors = 42 # Number of sensors in St. Gallen
     no_empty_if_below = 0.4
     station_0 = (47.4156038, 9.3325804) # Assumption: Empyting starts and ends at Kehrichtheizkraftwerk St.Gallen
     sensor_data = read_data(data_file, use_coordinates=True)
     sensor_data = sensor_data.loc[sensor_data.groupby('sensor_id').date.idxmax()] # Get sensor_id only once
 
-    map_service = MapService(vars_dict["MAPS_KEY"], sensor_data, day, n_sensors, station_0, no_empty_if_below)
+    map_service = MapService(vars_dict["MAPS_KEY"], sensor_data, n_sensors, station_0, no_empty_if_below)
     path_finder = PathFinder(map_service, sensor_data, station_0, n_sensors)
 
     levels = [sensor_data.iloc[i]["level"] for i in range(n_sensors)]
