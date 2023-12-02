@@ -89,18 +89,15 @@ class MapService:
 
         return cost_matrix
 
-    def generate_map(self, visited_stops: list, show_min_max_markers: bool = False):
+    def generate_map(self, visited_locations: list, show_min_max_markers: bool = False):
         points = []
         markers = []
-        for stop in visited_stops:
-            if stop != -1:
-                sensor = self.sensor_data.iloc[stop]
-                location = sensor["geo_point_2d"].split(", ")
+        for location in visited_locations:
+            if location != self.station_0:
                 markers.append(StaticMapMarker(
                     locations=[location],
                     size="tiny",
                     color="red",
-                    #label=chr(ord('a') + -32 + stop),
                 ))
             else:
                 location = self.station_0
