@@ -2,7 +2,6 @@ import math
 
 from numpy import array
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
 MAX_SENSOR_INPUT = 1600
 
