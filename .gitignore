@@ -1,6 +1,7 @@
 data/
 .env
 map-output.png
+map-output-refined.png
 __pycache__/
 todo
 trained_models/
