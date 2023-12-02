@@ -2,3 +2,5 @@ data/
 .env
 map-output.png
 __pycache__/
+todo
+trained_models/

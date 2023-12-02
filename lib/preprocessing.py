@@ -26,6 +26,12 @@ def read_data(from_path: str, use_coordinates: bool = False):
     days_merged['level'] = days_merged['level'].apply(lambda level: normalize_data(level))  # normalise data
     return days_merged
 
+def data_split(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    train_data = data[0:int(len(data)*0.9)]
+    validate_data = data [int(len(data)*0.9):]
+    #train_data, validate_data = train_test_split(data, test_size=0.1, random_state=42)
+    
+    return  train_data, validate_data
 
 def _merge_days(dataframe: pd.DataFrame, use_coordinates):
     dataframe['date'] = pd.to_datetime(dataframe['date'], utc=True).dt.date
@@ -49,7 +55,7 @@ def normalize_data(level: float):
     return 1 - (level / MAX_SENSOR_INPUT)
 
 
-def sequence_data(data: list[float], step_size: int, sensor_noise: float = 0.1):
+def sequence_data(data: list[float], step_size: int, sensor_noise: float = 0.1) -> tuple[array, array]:
     x, y = [], []
     for i in range(len(data) - step_size):
         sub_array = data[i: i + step_size]
