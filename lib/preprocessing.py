@@ -49,7 +49,7 @@ def normalize_data(level: float):
     return 1 - (level / MAX_SENSOR_INPUT)
 
 
-def sequence_data(data: list[float], step_size: int, sensor_noise: float = 0.1):
+def sequence_data(data: list[float], step_size: int, sensor_noise: float = 0.1) -> tuple[array, array]:
     x, y = [], []
     for i in range(len(data) - step_size):
         sub_array = data[i: i + step_size]
