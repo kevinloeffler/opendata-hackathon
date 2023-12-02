@@ -16,7 +16,17 @@ import FunctionsIcon from '@mui/icons-material/Functions';
 import dayjs from 'dayjs';
 import LinearProgress from '@mui/material/LinearProgress';
 import Badge from '@mui/material/Badge';
-import { predict } from '../api';
+import { getPath } from '../api';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Avatar from '@mui/material/Avatar';
+import RoomIcon from '@mui/icons-material/Room';
+import RecyclingIcon from '@mui/icons-material/Recycling';
 
 const marks = [
   {
@@ -56,6 +66,66 @@ const durationMarks = [
   },
 ];
 
+const predictedRoute = [
+  [
+    47.4156038,
+    9.3325804
+  ],
+  {
+    "date": "Sat, 21 May 2022 00:00:00 GMT",
+    "lat": "47.4351834416",
+    "level": 0.1217434210526317,
+    "lng": "9.3918149135",
+    "sensor_id": "107132 | 255E",
+    "type": "Glas / Grün,YMATRON"
+  },
+  {
+    "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+    "lat": "47.412065012904804",
+    "level": 0.6643749999999999,
+    "lng": "9.335980774191682",
+    "sensor_id": "107026 | 67BE",
+    "type": "YMATRON,Glas / Braun"
+  },
+  {
+    "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+    "lat": "47.41208",
+    "level": 0.4225,
+    "lng": "9.33586",
+    "sensor_id": "107068 | 4455",
+    "type": "YMATRON,Glas / Grün"
+  },
+  {
+    "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+    "lat": "47.41209608066285",
+    "level": 0.40874999999999995,
+    "lng": "9.33591068841119",
+    "sensor_id": "107072 | F389",
+    "type": "Glas / Weiss,YMATRON"
+  },
+  {
+    "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+    "lat": "47.40792974774064",
+    "level": 0.67225,
+    "lng": "9.33352525794038",
+    "sensor_id": "107065 | 4A3D",
+    "type": "Glas / Weiss,YMATRON"
+  },
+  {
+    "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+    "lat": "47.40798",
+    "level": 0.6775,
+    "lng": "9.33388",
+    "sensor_id": "107077 | 2CC4",
+    "type": "YMATRON,Glas / Grün"
+  },
+  [
+    47.4156038,
+    9.3325804
+  ]
+];
+
+
 const Sidebar = () => {
 
   const [state, setState] = React.useState({
@@ -65,6 +135,9 @@ const Sidebar = () => {
     predictionRunning: false,
     predictionDone: false,
     selectedDate: dayjs().add(1, 'day'),
+    no_empty_if_below: 40,
+    tour_duration: 6,
+    predictionResult: {},
   });
 
   const handleChange = (event) => {
@@ -74,7 +147,7 @@ const Sidebar = () => {
     });
   };
 
-  const { brown, white, green, selectedDate, predictionRunning, predictionDone } = state;
+  const { brown, white, green, selectedDate, predictionRunning, predictionDone, no_empty_if_below, tour_duration } = state;
   const error = [brown, white, green].filter((v) => v).length < 1;
 
   const highlightedDays = [];
@@ -105,6 +178,7 @@ const Sidebar = () => {
         predictionDone ?
 
           <Grid container spacing={1} padding={3}>
+            
             <Grid item xs={12}>
               <b>Nächste Leerung {selectedDate.format('DD.MM.YYYY')}</b>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -132,15 +206,82 @@ const Sidebar = () => {
               </LocalizationProvider>
             </Grid>
 
+            {selectedDate > dayjs().add(5, 'day') ? <div>Keine Vorhersage möglich</div> :
+
+            <Grid container spacing={1}>
             <Grid item xs={12}>
+              <Card>
+                <CardContent>
                 <b>Informationen zur Leerung</b>
+                <Typography>
+                  Leerung ab Füllstand: {no_empty_if_below}%<br/>
+                  Dauer der Tour: {tour_duration}<br />
+                  Glasarten: {[state.white ? 'Weiss': '', state.brown ? 'Braun' : '', state.green ? 'Grün' : ''].filter(Boolean).join(', ')}<br/>
+                </Typography>
+                
+                </CardContent>
+              </Card>
             </Grid>
 
+            {state.predictionresult && Object.isEmpty(state.predictionresult) ?
             <Grid item xs={12}>
-                <Button variant="contained" fullWidth endIcon={<ArrowBackIcon />} onClick={handleBack}>
-                  Zurück
-                </Button>
+              <Card style={{ backgroundColor: '#16A74E42' }}>
+                <CardContent>
+                <b>Vorhersage zur Leerung am {selectedDate.format('DD.MM.YYYY')}</b>
+                <Typography>
+                  Geleerte Glascontainer: {state.predictionResult ? state.predictionResult?.visited_locations[0].length : ''}
+                  Sum. geleerte Kapazitäten: {state.predictionResult ? state.predictionResult?.needed_capacities[0] : ''}<br/>
+                  Berechnte Tourdauer (in h): {state.predictionResult ? state.predictionResult?.needed_times[0] / 3600 : ''}h<br/>
+                </Typography>
+                
+                </CardContent>
+              </Card>
+            </Grid> : null}
+
+            {predictedRoute ?
+            
+            <Grid item xs={12}>
+              <b>Tour</b>
+              <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+
+                {predictedRoute.map((sensor, index) => {
+                  if (Array.isArray(sensor)) {
+                    return (
+                      <ListItem key={index}>
+                      <ListItemAvatar>
+                        <Avatar>
+                          <RecyclingIcon />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary="KHK St. Gallen" secondary="Sammelstelle" />
+                    </ListItem>
+                    );
+                  }
+                  return (
+                    <ListItem key={index}>
+                      <ListItemAvatar>
+                        <Avatar>
+                          <RoomIcon />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={index + ". " + sensor.sensor_id + " (" + sensor.type + ")"} 
+                                    secondary={` Erwarteter Füllstand: ` + (parseFloat(sensor.level).toFixed(4) * 100) + "%"} />
+                    </ListItem>
+                  );
+                })}
+
+              </List>
+
             </Grid>
+            : null}
+
+            <Grid item xs={12}>
+              <Button variant="contained" fullWidth endIcon={<ArrowBackIcon />} onClick={handleBack}>
+                Zurück
+              </Button>
+            </Grid>
+
+          </Grid> }
 
           </Grid>
 
@@ -151,6 +292,8 @@ const Sidebar = () => {
               <h3>Nächste Leerungen Vorhersagen</h3>
               <b>Leeren ab Füllstand</b>
               <Slider
+                value={no_empty_if_below}
+                onChange={(e) => setState({ ...state, no_empty_if_below: e.target.value })}
                 aria-label="Always visible"
                 defaultValue={80}
                 getAriaValueText={percentValueText}
@@ -163,6 +306,8 @@ const Sidebar = () => {
             <Grid item xs={12}>
               <b>Dauer der Tour</b>
               <Slider
+                value={tour_duration}
+                onChange={(e) => setState({ ...state, tour_duration: e.target.value })}
                 aria-label="Always visible"
                 defaultValue={6}
                 getAriaValueText={percentValueText}
@@ -233,7 +378,14 @@ const Sidebar = () => {
   function handlePrediction() {
     setState({ ...state, predictionRunning: true });
 
-    predict()
+    const params = {
+      brown: state.brown,
+      white: state.white,
+      green: state.green,
+      no_empty_if_below: state.no_empty_if_below,
+    };
+
+    getPath(params)
       .then((result) => {
         setState({ ...state, predictionRunning: false, predictionDone: true, predictionResult: result });
       })

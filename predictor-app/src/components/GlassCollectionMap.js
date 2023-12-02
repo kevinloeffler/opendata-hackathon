@@ -26,6 +26,66 @@ const GlassCollectionMap = ({ key }) => {
   }, [key]);
 
   const sensors = useSelector((state) => state.sensor.sensors);
+  //const predictedRoute = useSelector((state) => state.predictedRoute.predictedRoute);
+
+  const predictedRoute = [
+    [
+      47.4156038,
+      9.3325804
+    ],
+    {
+      "date": "Sat, 21 May 2022 00:00:00 GMT",
+      "lat": "47.4351834416",
+      "level": 0.1217434210526317,
+      "lng": "9.3918149135",
+      "sensor_id": "107132 | 255E",
+      "type": "Glas / Grün,YMATRON"
+    },
+    {
+      "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+      "lat": "47.412065012904804",
+      "level": 0.6643749999999999,
+      "lng": "9.335980774191682",
+      "sensor_id": "107026 | 67BE",
+      "type": "YMATRON,Glas / Braun"
+    },
+    {
+      "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+      "lat": "47.41208",
+      "level": 0.4225,
+      "lng": "9.33586",
+      "sensor_id": "107068 | 4455",
+      "type": "YMATRON,Glas / Grün"
+    },
+    {
+      "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+      "lat": "47.41209608066285",
+      "level": 0.40874999999999995,
+      "lng": "9.33591068841119",
+      "sensor_id": "107072 | F389",
+      "type": "Glas / Weiss,YMATRON"
+    },
+    {
+      "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+      "lat": "47.40792974774064",
+      "level": 0.67225,
+      "lng": "9.33352525794038",
+      "sensor_id": "107065 | 4A3D",
+      "type": "Glas / Weiss,YMATRON"
+    },
+    {
+      "date": "Mon, 10 Oct 2022 00:00:00 GMT",
+      "lat": "47.40798",
+      "level": 0.6775,
+      "lng": "9.33388",
+      "sensor_id": "107077 | 2CC4",
+      "type": "YMATRON,Glas / Grün"
+    },
+    [
+      47.4156038,
+      9.3325804
+    ]
+  ];
 
   console.log(sensors);
 
@@ -36,17 +96,38 @@ const GlassCollectionMap = ({ key }) => {
   const [response, setResponse] = useState(null);
   const [travelMode, setTravelMode] = useState('DRIVING'); // You can change the travel mode as needed
 
-  const origin = center;
-  const destination = { lat: 47.4215, lng: 9.2375 };
-
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && predictedRoute) {
       const directionsService = new window.google.maps.DirectionsService();
+
+      const origin = {
+        lat: Number(predictedRoute[0][0]),
+        lng: Number(predictedRoute[0][1]),
+      };
+
+      const destination = {
+        lat: Number(predictedRoute[predictedRoute.length - 1][0]),
+        lng: Number(predictedRoute[predictedRoute.length - 1][1]),
+      };
+
+      const waypoints = predictedRoute.slice(1, predictedRoute.length - 1).map((sensor) => {
+        console.log(parseFloat(sensor.lat).toFixed(7), parseFloat(sensor.lng).toFixed(7));
+
+        return {
+          location: new window.google.maps.LatLng(parseFloat(sensor.lat).toFixed(7), parseFloat(sensor.lng).toFixed(7)),
+          stopover: true,
+        };
+      });
+
+      //console.log(waypoints);
+      console.log(origin);
+      console.log(destination);
 
       directionsService.route(
         {
           origin: new window.google.maps.LatLng(origin.lat, origin.lng),
           destination: new window.google.maps.LatLng(destination.lat, destination.lng),
+          waypoints: waypoints,
           travelMode: travelMode,
         },
         (result, status) => {
@@ -58,7 +139,7 @@ const GlassCollectionMap = ({ key }) => {
         }
       );
     }
-  }, [destination.lat, destination.lng, isLoaded, origin, travelMode]);
+  }, [isLoaded, travelMode,]);
 
   if (loadError) {
     return <div>Error loading maps</div>;
@@ -103,6 +184,8 @@ const GlassCollectionMap = ({ key }) => {
           />
         )) : null
       }
+
+      {directions}
 
     </GoogleMap>
   );

@@ -3,10 +3,6 @@
  */
 const backend = "http://localhost:5000";
 
-export function predict() {
-  return postJson("/predict").then(parseJSON);
-}
-
 export function getPath(params) {
   return getJson("/path", params).then(parseJSON);
 }
