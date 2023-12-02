@@ -3,9 +3,12 @@ Run from root directory:
 flask --app lib/path-api run
 '''
 from flask import Flask
+from flask import jsonify
+import json
 from preprocessing import read_data
 from map_service import MapService
 from path_finder import PathFinder
+from flask import Response
 
 app = Flask(__name__)
 data_file = 'data/fill-level.csv'
@@ -27,6 +30,5 @@ path_finder = PathFinder(map_service, sensor_data, station_0, n_sensors)
 
 @app.route("/path", methods=['GET'])
 def get_path():
-    visited_stops, needed_time = path_finder.find_path()
-    print(needed_time)
-    return "Hello, World!"
+    _, needed_time, visited_locations = path_finder.find_path()
+    return jsonify({"visited_locations": visited_locations, "needed_time": needed_time})
