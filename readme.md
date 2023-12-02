@@ -19,6 +19,12 @@ and safe it at `data/fill-level.csv` or use the `download-data.sh` script.
 Use the generate_dummy_data method to receive random sensor values. The model should return the prediction the same way.
 The method takes a list of the requested sensor names as argument.
 
+### Ideas
+Ideas that can be explored if there is time:
+- [ ] Vary the number of inputs, the timeranges, the number of outputs...
+- [ ] Add sensor noise threshold
+- [ ] Test if training on single sensors is better
+
 ### Data
 List of all sensor names:
 - 107075 | 2B2A
