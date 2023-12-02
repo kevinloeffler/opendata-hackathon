@@ -1,6 +1,6 @@
 from numpy import array
 
-from lib.models.vanilla_lstm import VanillaLSTM, VanillaLSTMBiggerStepSize
+from lib.models.vanilla_lstm import VanillaLSTM, VanillaLSTMandDay
 from lib.preprocessing import read_data, sequence_data, sequence_data_and_day, get_sensor_values, get_training_data_and_day, get_training_data, split_data
 
 
@@ -15,21 +15,22 @@ train = get_training_data_and_day(raw_train)
 test = get_training_data_and_day(raw_test)
 print(len(train), len(test))
 train_x, train_y = sequence_data_and_day(train, STEP_SIZE)
-test_x, test_y = sequence_data(test, STEP_SIZE)
+test_x, test_y = sequence_data_and_day(test, STEP_SIZE)
 #for index, x in enumerate(train_x):
 #    print(x, '->', train_y[index])
 
 # EXAMPLE: Create model
 
+'''
 vanilla_lstm_model = VanillaLSTMandDay(step_size=STEP_SIZE)
-vanilla_lstm_model.train(train_x, train_y, 40, 'trained_models/VanillaLSTMandDay')
+vanilla_lstm_model.train(train_x, train_y, 10, 'trained_models/VanillaLSTMandDay')
 accuracy = vanilla_lstm_model.test(test_x, test_y)
 print('accuracy:', round(100 * accuracy, 3), '%')
 '''
 
+
 # EXAMPLE: Load model from disk
-model = VanillaLSTM(step_size=STEP_SIZE, load_from='trained_models/vanilla-lstm-2')
+model = VanillaLSTMandDay(step_size=STEP_SIZE, load_from='trained_models/VanillaLSTMandDay-1')
 accuracy = model.test(test_x, test_y)
 print(accuracy)
 
-'''

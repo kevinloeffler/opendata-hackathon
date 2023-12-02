@@ -72,9 +72,9 @@ def sequence_data_and_day(data: list[tuple[float, float]], step_size: int, senso
     x, y = [], []
     for i in range(len(data) - step_size):
         sub_array = data[i: i + step_size]
-        if not check_if_array_is_ascending(sub_array) or data[i + step_size][0] < data[i + step_size - 1][0]:  # + sensor_noise:
+        if not check_if_array_is_ascending(sub_array): # + sensor_noise:
             continue
-        x.append((array([item[0] for item in sub_array]), sub_array[-1][1]))
+        x.append(array([[item[0] for item in sub_array], [item[1] for item in sub_array]]))
         y.append(data[i + step_size][0])
     return array(x), array(y)
 
@@ -84,7 +84,7 @@ def sequence_data(data: list[float], step_size: int, sensor_noise: float = 0.1) 
     x, y = [], []
     for i in range(len(data) - step_size):
         sub_array = data[i: i + step_size]
-        if not check_if_array_is_ascending(sub_array) or data[i + step_size] < data[i + step_size - 1]:  # + sensor_noise:
+        if not check_if_array_is_ascending(sub_array):  # + sensor_noise:
             continue
         x.append(data[i: i + step_size])
         y.append(data[i + step_size])
@@ -92,8 +92,8 @@ def sequence_data(data: list[float], step_size: int, sensor_noise: float = 0.1) 
 
 
 def check_if_array_is_ascending(array: list[float]) -> bool:
-    for i in range(len(array) - 1):
-        if array[i] > array[i + 1]:
+    for i in range(1, len(array)):
+        if array[i-1] > array[i]:
             return False
     return True
 
