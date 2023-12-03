@@ -41,6 +41,18 @@ The model is trained in sequences of 5 days to predict the 6. day. Therefore, th
 #### Path Refinement
 As from our rough tests, the path refinement results in a reduced driving time of approximately 5-10 minutes per path. 
 
+
+## Future Ideas ✨
+Ideas that can be explored if there is time:
+- [ ] Host on a server
+- [ ] Improve the model by adding more influencing parameters such as weekday, season or fill levels of nearby ALU sensors
+- [ ] Edge case handling
+- [ ] Torough testing
+- [ ] Vary the number of inputs, the timeranges, the number of outputs...
+- [ ] Add sensor noise threshold
+- [ ] Test if training on single sensors is better
+
+
 ## Setup
 Create a conda environment with `conda create --name <env> --file requirements.txt`. We recommend using python version 3.9.
 
@@ -66,13 +78,3 @@ In order to use the model, the datasets must be available and merged (as done in
 The Google Maps API key must be saved in a second location as `REACT_APP_GOOGLE_MAPS_API_KEY=<key>` in a .env file in the predictor-app/ folder.
 
 The UI is located in the predictor-app/ folder. First run `npm install` in the given folder, the start it using `npm run start`.
-
-### Future Ideas ✨
-Ideas that can be explored if there is time:
-- [ ] Host on a server
-- [ ] Improve the model by adding more influencing parameters such as weekday, season or fill levels of nearby ALU sensors
-- [ ] Edge case handling
-- [ ] Torough testing
-- [ ] Vary the number of inputs, the timeranges, the number of outputs...
-- [ ] Add sensor noise threshold
-- [ ] Test if training on single sensors is better

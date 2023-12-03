@@ -84,7 +84,7 @@ class MapService:
        
         for node_to in range(self.n_sensors):
             sensor_to = self.sensor_data.iloc[node_to]
-            cost_matrix[-1][node_to] = dist_matrix[-1][node_to] / sensor_to["level"]
+            cost_matrix[-1][node_to] = dist_matrix[-1][node_to] / sensor_to["level"] if sensor_to["level"] > self.no_empty_if_below else np.inf
             cost_matrix[node_to][-1] = dist_matrix[node_to][-1]
 
         return cost_matrix

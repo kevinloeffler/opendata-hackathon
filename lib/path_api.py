@@ -56,9 +56,10 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
         print(needed_capacity)
         print(visited_stations_by_id)
         most_left_point = np.argmin([float(x["lat"]) for x in visited_stations[1:-1]])
-        tour, locations = path_finder.refine_path(most_left_point, visited_stops[1:-1], visited_stations[1:-1])
+        _, locations = path_finder.refine_path(most_left_point, visited_stops[1:-1], visited_stations[1:-1])
         locations = [station_0] + locations + [station_0]
-        print(tour)
+        print("Refined path:")
+        print([x["sensor_id"] for x in locations[1:-1]])
 
         all_needed_time.append(needed_time)
         all_needed_capacity.append(needed_capacity)
