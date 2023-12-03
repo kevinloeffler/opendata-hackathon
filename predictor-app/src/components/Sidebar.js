@@ -16,7 +16,7 @@ import FunctionsIcon from '@mui/icons-material/Functions';
 import dayjs from 'dayjs';
 import LinearProgress from '@mui/material/LinearProgress';
 import Badge from '@mui/material/Badge';
-import { getPath } from '../api';
+import { getPath, getSensors } from '../api';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -27,7 +27,9 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
 import RoomIcon from '@mui/icons-material/Room';
 import RecyclingIcon from '@mui/icons-material/Recycling';
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setPredictedRoute } from '../redux/predictedRouteSlice';
+import { setSensors } from '../redux/sensorSlice';
 
 const marks = [
   {
@@ -68,9 +70,9 @@ const durationMarks = [
 ];
 
 const Sidebar = () => {
-  
-
+  const dispatch = useDispatch();
   const predictedRoute = useSelector((state) => state.predictedRoute.predictedRoute);
+  const sensors = useSelector((state) => state.sensor.sensors);
 
   const [state, setState] = React.useState({
     brown: true,
@@ -127,6 +129,7 @@ const Sidebar = () => {
               <b>Nächste Leerung {selectedDate.format('DD.MM.YYYY')}</b>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateCalendar defaultValue={dayjs().add(1, 'day')}
+
                   disablePast={true}
 
                   onChange={(newValue) => {
@@ -134,6 +137,11 @@ const Sidebar = () => {
                       console.log('too far in the future');
                     }
                     setState({ ...state, selectedDate: newValue });
+
+                    const selectedIndex = newValue.diff(dayjs(), 'day');
+                    dispatch(setPredictedRoute(state.predictionResult.visited_locations[selectedIndex]));
+
+                    filterSensors(selectedIndex, state.predictionResult.visited_locations);
                   }}
 
                   slots={{
@@ -167,15 +175,15 @@ const Sidebar = () => {
               </Card>
             </Grid>
 
-            {state.predictionresult && Object.isEmpty(state.predictionresult) ?
+            {state.predictionResult ?
             <Grid item xs={12}>
               <Card style={{ backgroundColor: '#16A74E42' }}>
                 <CardContent>
                 <b>Vorhersage zur Leerung am {selectedDate.format('DD.MM.YYYY')}</b>
                 <Typography>
-                  Geleerte Glascontainer: {state.predictionResult ? state.predictionResult?.visited_locations[0].length : ''}
-                  Sum. geleerte Kapazitäten: {state.predictionResult ? state.predictionResult?.needed_capacities[0] : ''}<br/>
-                  Berechnte Tourdauer (in h): {state.predictionResult ? state.predictionResult?.needed_times[0] / 3600 : ''}h<br/>
+                  Geleerte Glascontainer: {state.predictionResult ? state.predictionResult?.visited_locations[selectedDate.diff(dayjs(), 'day')].length -2 : ''}<br/>
+                  Sum. geleerte Kapazitäten: {state.predictionResult ? state.predictionResult?.needed_capacities[selectedDate.diff(dayjs(), 'day')] : ''}<br/>
+                  Berechnte Tourdauer (in h): {state.predictionResult ? state.predictionResult?.needed_times[selectedDate.diff(dayjs(), 'day')] / 3600 : ''}h<br/>
                 </Typography>
                 
                 </CardContent>
@@ -327,21 +335,56 @@ const Sidebar = () => {
       white: state.white,
       green: state.green,
       no_empty_if_below: state.no_empty_if_below,
+      tour_duration: state.tour_duration,
     };
 
     getPath(params)
       .then((result) => {
+        dispatch(setPredictedRoute(result.visited_locations[0]));
         setState({ ...state, predictionRunning: false, predictionDone: true, predictionResult: result });
+        
+        filterSensors(0, result.visited_locations);
       })
       .catch((ex) => console.error(ex));
   }
 
   function handleBack() {
-    setState({ ...state, predictionDone: false });
+    dispatch(setPredictedRoute([]));
+    setState({ ...state, predictionDone: false, predictionResult: {} });
+
+    fetchSensors();
+  }
+
+  function fetchSensors() {
+    getSensors()
+                .then((result) => {
+                  dispatch(setSensors(result));
+                })
+                .catch((ex) => console.error(ex));
   }
 
   function percentValueText(value) {
     return `${value}%`;
+  }
+
+  function filterSensors(selectedIndex, visited_locations) {
+    getSensors()
+      .then((result) => {
+
+        const filteredSensors = [];
+
+        for (const sensor of result) {
+          for (let i = 1; i < visited_locations[selectedIndex].length - 1; i++) {
+            if (sensor.sensor_id.includes(visited_locations[selectedIndex][i].sensor_id)) {
+              filteredSensors.push(sensor);
+            }
+          }
+        }
+    
+        dispatch(setSensors(filteredSensors));
+      
+      })
+      .catch((ex) => console.error(ex));
   }
 };
 

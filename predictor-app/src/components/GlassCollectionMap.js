@@ -18,12 +18,6 @@ const center = {
 const zoom = 13;
 
 const GlassCollectionMap = ({ key }) => {
-  useEffect(() => {
-    // This effect will run whenever the key prop changes
-    console.log('ChildComponent has been re-rendered with a new key:', key);
-
-    // Add any logic here to update the component with new data
-  }, [key]);
 
   const sensors = useSelector((state) => state.sensor.sensors);
   const predictedRoute = useSelector((state) => state.predictedRoute.predictedRoute);
@@ -39,7 +33,7 @@ const GlassCollectionMap = ({ key }) => {
   const [travelMode, setTravelMode] = useState('DRIVING'); // You can change the travel mode as needed
 
   useEffect(() => {
-    if (isLoaded && predictedRoute) {
+    if (isLoaded && predictedRoute && predictedRoute.length > 0) {
       const directionsService = new window.google.maps.DirectionsService();
 
       const origin = {
@@ -123,7 +117,7 @@ const GlassCollectionMap = ({ key }) => {
         )) : null
       }
 
-      {directions}
+      {predictedRoute ? directions : null}
 
     </GoogleMap>
   );

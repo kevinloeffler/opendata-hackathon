@@ -34,6 +34,7 @@ model = VanillaLSTM(step_size=STEP_SIZE, load_from='trained_models/vanilla-lstm-
 no_empty_if_below = 0.4
 n_days = 5
 
+
 def get_next_n_days(n_days: int, no_empty_if_below: float):
     all_needed_time = []
     all_needed_capacity = []
@@ -59,15 +60,15 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
         print(needed_capacity)
         print(visited_stations_by_id)
         most_left_point = np.argmin([float(x["lat"]) for x in visited_stations[1:-1]])
-        tour, locations = path_finder.refine_path(most_left_point+1, visited_stops) # +1 because visited_stations[1:-1]
+        tour, locations = path_finder.refine_path(most_left_point+1, visited_stops) #+1 because visited_stations[1:-1]
         locations = [station_0] + locations + [station_0]
         print(tour)
 
         all_needed_time.append(needed_time)
         all_needed_capacity.append(needed_capacity)
-        all_visited_locations.append(locations)
+        all_visited_locations.append(visited_stations)
 
-        # calculate predictions for next iteration
+        #calculate predictions for next iteration
         for sensor_id, values_raw in list(sensor_data_raw.groupby('sensor_id')):
             last_5_values = values_raw.sort_values(by="date").tail(5-i)["level"].to_numpy()
             if all_predictions.get(sensor_id):
@@ -86,7 +87,7 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
         for sensor_id, predictions in all_predictions.items():
             #has_been_emptied = np.in1d(sensor_id, visited_stations_by_id)[0]
             #if has_been_emptied:
-            #    predictions[-1] = 0 # updates value in all_predictions
+            #    predictions[-1] = 0 #updates value in all_predictions
 
             sensor = sensor_data[sensor_data["sensor_id"] == sensor_id].iloc[0]
             new_entry = pd.Series({
@@ -102,9 +103,9 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
 
 #get_next_n_days(n_days, no_empty_if_below)
 
+
 @path_api.route("", methods=['GET'])
 def get_path():
-    selected_date = request.args.get('date')
     no_empty_if_below = float(request.args.get('no_empty_if_below')) if request.args.get('no_empty_if_below') is not None else 0.4
     glass_type_list = request.args.get('glass_type_list').split(",") if request.args.get('glass_type_list') is not None else None
 

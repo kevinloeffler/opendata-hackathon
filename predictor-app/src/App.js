@@ -28,19 +28,16 @@ const App = () => {
   const dispatch = useDispatch();
   const sensors = useSelector((state) => state.sensor.sensors);
   
-  const [keyForChild, setKeyForChild] = useState(1);
-
   useEffect(() => {
-    if (sensors === undefined || sensors.length === 0) {
+    if (sensors === undefined || sensors.length < 1) {
       getSensors()
                 .then((result) => {
                   console.log(result); 
                   dispatch(setSensors(result));
                 })
-                .then(() => setKeyForChild((prevKey) => prevKey + 1))
                 .catch((ex) => console.error(ex));
     }
-  }, [dispatch, sensors]);
+  });
 
   return (
     <ThemeProvider theme={theme}>
@@ -72,7 +69,7 @@ const App = () => {
         <Box component="main" sx={{ flexGrow: 1 }}>
           <Toolbar />
 
-            <GlassCollectionMap key={keyForChild} sensors={sensors} />
+            <GlassCollectionMap />
 
         </Box>
       </Box>
