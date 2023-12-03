@@ -1,7 +1,7 @@
 # Open Data Hack 2023
 
 **Goal:** Use an LSTM AI model to predict the fill levels of recycling stations in St. Gallen
-and create a pathfinding algorithm that finds the ideal routes for city employees, for the next week.
+and create a pathfinding algorithm that finds the ideal routes for city employees, for the next work week.
 
 ### Components
 
@@ -10,21 +10,30 @@ and create a pathfinding algorithm that finds the ideal routes for city employee
 3) Visualise optimal route with a web app
 
 ### Setup
+Create a conda environment with `conda create --name <env> --file requirements.txt`. We recommend using python version 3.9.
 
-Download the file [here](https://www.daten.stadt.sg.ch/explore/dataset/fullstandssensoren-sammelstellen-stadt-stgallen/export/?disjunctive.name&disjunctive.tags&sort=measured_at) 
-and safe it at `data/fill-level.csv` or use the `download-data.sh` script. Or similar
+Create a Google Maps API key and save it for later steps (you can easily find the documentation online).
 
-#### Update 
-The API has changed. The API has been split up in 3 parts for each glass type.
-The new API is documented as follows:
+Run the bash script `download-data.sh`. This will download the data to the data folder. Afterwards run `preprocessing.py` directly which will create a single csv file from all the 3 datasets.
+
+##### Alternative Setup:
+Download the files below into the data folder: 
 - [Füllstandsensoren Glassammelstellen (Weissglas)](https://www.daten.stadt.sg.ch/explore/dataset/fuellstandsensoren-glassammelstellen-weissglas/table/?disjunctive.device_id&disjunctive.name)
 - [Füllstandsensoren Glassammelstellen (Grünglas)](https://www.daten.stadt.sg.ch/explore/dataset/fuellstandsensoren-glassammelstellen-gruenglas/table/?disjunctive.device_id&disjunctive.name)
 - [Füllstandsensoren Glassammelstellen (Braunglas)](https://www.daten.stadt.sg.ch/explore/dataset/fuellstandsensoren-glassammelstellen-braunglas/table/?disjunctive.device_id&disjunctive.name)
 
-### API
+#### Train the model
+To train the model, the datasets must be available and merged (as done in the Setup step). The file must be available under data/days_merged.csv. Afterwards, you can execute `main.py` in the project root which will train the model and save a snapshot to the trained-models/ folder.
 
-Use the generate_dummy_data method to receive random sensor values. The model should return the prediction the same way.
-The method takes a list of the requested sensor names as argument.
+#### API
+The Google Maps API key must be saved under as `MAPS_KEY=<key>` in a .env file in the project root.
+
+In order to use the model, the datasets must be available and merged (as done in the Setup step). Also, the model must be trained. Afterwards, the command `flask --app lib/api run` can be executed from the project root. 
+
+#### UI
+The Google Maps API key must be saved in a second location as `REACT_APP_GOOGLE_MAPS_API_KEY=<key>` in a .env file in the predictor-app/ folder.
+
+The UI is located in the predictor-app/ folder. First run `npm install` in the given folder, the start it using `npm run start`.
 
 ### Ideas
 Ideas that can be explored if there is time:

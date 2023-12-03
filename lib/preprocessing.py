@@ -3,28 +3,58 @@ import math
 from numpy import array
 import pandas as pd
 
+
 MAX_SENSOR_INPUT = 1600
 
 
-def read_data(from_path: str, use_coordinates: bool = False):
+def read_data(from_path_w: str, from_path_g: str, from_path_b: str, use_coordinates: bool = True):
     columns = [
-        'Gemessen am',
-        'Tags',
-        'Füllstandsdistanz',
-        'Sensorname',
+        'measured_at',
+        'data_distance',
+        'name',
     ]
 
     if use_coordinates:
         columns.append('geo_point_2d')
         # TODO: needs to be implemented in later functions (e.g. _merge_days) if really needed
+       
+        
+    raw_data_w = pd.read_csv(from_path_w, delimiter=';', usecols=columns)
+    raw_data_w = raw_data_w.rename(columns={'measured_at': 'date', 'data_distance': 'level', 'name': 'sensor_id'})
 
-    raw_data = pd.read_csv(from_path, delimiter=';', usecols=columns)
-    raw_data = raw_data.rename(columns={'Gemessen am': 'date', 'Tags': 'type', 'Füllstandsdistanz': 'level', 'Sensorname': 'sensor_id'})
+    #adding type column based on name of csv input file
+    glasstype="Weissglas"
+    raw_data_w ['type'] = glasstype
+    filtered_data_w = raw_data_w[raw_data_w['level'].notna()]  # filter all rows with invalid sensor data
+    days_merged_w = _merge_days(filtered_data_w, use_coordinates)
+    days_merged_w['level'] = days_merged_w['level'].apply(lambda level: normalize_data(level))  # normalise data
+    
+    raw_data_g = pd.read_csv(from_path_g, delimiter=';', usecols=columns)
+    raw_data_g = raw_data_g.rename(columns={'measured_at': 'date', 'data_distance': 'level', 'name': 'sensor_id'})
+    
+    #adding type column based on name of csv input file
+    glasstype="Grünglas"
+    raw_data_g ['type'] = glasstype
+    filtered_data_g = raw_data_g[raw_data_g['level'].notna()]  # filter all rows with invalid sensor data
+    days_merged_g = _merge_days(filtered_data_g, use_coordinates)
+    days_merged_g['level'] = days_merged_g['level'].apply(lambda level: normalize_data(level))  # normalise data
+    
+    raw_data_b = pd.read_csv(from_path_w, delimiter=';', usecols=columns)
+    raw_data_b = raw_data_b.rename(columns={'measured_at': 'date', 'data_distance': 'level', 'name': 'sensor_id'})
+    
+    #adding type column based on name of csv input file
+    glasstype="Braunglas"
+    raw_data_b ['type'] = glasstype
+    filtered_data_b = raw_data_b[raw_data_b['level'].notna()]  # filter all rows with invalid sensor data
+    days_merged_b = _merge_days(filtered_data_b, use_coordinates)
+    days_merged_b['level'] = days_merged_b['level'].apply(lambda level: normalize_data(level))  # normalise data
 
-    filtered_data = raw_data[raw_data['level'].notna()]  # filter all rows with invalid sensor data
-    days_merged = _merge_days(filtered_data, use_coordinates)
-    days_merged['level'] = days_merged['level'].apply(lambda level: normalize_data(level))  # normalise data
+    
+    days_merged=pd.concat([days_merged_b,days_merged_g, days_merged_w]).sort_values(by="date")
+    
+    
     return days_merged
+
 
 def data_split(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     train_data = data[0:int(len(data)*0.9)]
@@ -76,3 +106,9 @@ def check_if_array_is_ascending(array: list[float]) -> bool:
 def split_data(data: pd.DataFrame, ratio: float) -> tuple[pd.DataFrame, pd.DataFrame]:
     total_len = len(data)
     return data[0:round(total_len * ratio)], data[round(total_len * ratio):]
+
+
+if __name__ == '__main__':
+    file_path = "data/days_merged.csv"
+    days_merged = read_data("data/data_w.csv", "data/data_g.csv", "data/data_b.csv")
+    days_merged.to_csv(file_path,sep=',', index=False) 
