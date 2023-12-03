@@ -1,7 +1,6 @@
 '''
 Calculate optimal route to empty glass containers. Units are in seconds. 
 '''
-from preprocessing import read_data
 from map_service import MapService
 import numpy as np
 import pandas as pd
@@ -9,14 +8,15 @@ import os
 
 create_map = True
 show_min_max_markers = False
-data_file = 'data/fill-level.csv'
+data_file = 'data/days_merged.csv'
 dist_file = 'data/distances.npy'
 map_file = 'map-output.png'
 map_file_refined = 'map-output-refined.png'
 
 class PathFinder:
-    time_per_working_day = 8 * 60 * 60 # 8 hours in seconds
-    time_per_emptying = 60 * 60 # 15 minutes in seconds, 5 minutes per container
+    capacity = 10 - 1 # size of trough minus 1 container
+    time_per_working_day = 6 * 60 * 60 # 6 hours in seconds divided by 3 because only 40/120 containers have sensors
+    time_per_emptying = 15 * 60 # 15 minutes in seconds, 5 minutes per container
 
     def __init__(self,  map_service: MapService, sensor_data: pd.DataFrame, station_0: tuple, n_sensors: int):
         self.sensor_data = sensor_data
@@ -35,48 +35,50 @@ class PathFinder:
     def find_path(self):
         cost_matrix = self.map_service.get_costs(self.dist_matrix)
 
+        needed_capacity = 0
         needed_time = 0
         current_stop_idx = -1 #station_0 index
-        visited_stops = []
+        visited_stops = [current_stop_idx]
         visited_locations = [self.station_0]
 
         # distances[current_stop_idx, 0] is the time needed from the station to station_0
-        while (needed_time < (self.time_per_working_day - cost_matrix[current_stop_idx, -1] - self.time_per_emptying)):
-            visited_stops.append(current_stop_idx)
-
-            location_information = {}
-            location_information["lat"] = self.sensor_data.iloc[current_stop_idx]["geo_point_2d"].split(", ")[0]
-            location_information["lng"] = self.sensor_data.iloc[current_stop_idx]["geo_point_2d"].split(", ")[1]
-            location_information["level"] = self.sensor_data.iloc[current_stop_idx]["level"]
-            location_information["sensor_id"] = self.sensor_data.iloc[current_stop_idx]["sensor_id"]
-            location_information["date"] = self.sensor_data.iloc[current_stop_idx]["date"]
-            location_information["type"] = self.sensor_data.iloc[current_stop_idx]["type"].split(", ")[0]
-
-            visited_locations.append(location_information)
-
+        while (needed_time < (self.time_per_working_day - cost_matrix[current_stop_idx, -1] - self.time_per_emptying) and needed_capacity < self.capacity):
             if len(visited_stops) == self.n_sensors+1:
                 # all stops visited
                 break
+
             min_cost = np.min(np.delete(cost_matrix[current_stop_idx,:], visited_stops, axis=0)) # Min cost of unvisited stops
             for idx in np.argwhere(cost_matrix[current_stop_idx,:] == min_cost).ravel():
                 if idx not in visited_stops:
                     next_stop_idx = int(idx)
             
-            actual_travel_time = self.sensor_data.iloc[next_stop_idx]["level"]
+            needed_capacity += self.sensor_data.iloc[next_stop_idx]["level"]
+            actual_travel_time = self.dist_matrix[current_stop_idx][next_stop_idx]
             needed_time += actual_travel_time + self.time_per_emptying
             current_stop_idx = next_stop_idx
+            visited_stops.append(next_stop_idx)
+            location_information = {}
+            location_information["lat"] = self.sensor_data.iloc[next_stop_idx]["geo_point_2d"].split(", ")[0]
+            location_information["lng"] = self.sensor_data.iloc[next_stop_idx]["geo_point_2d"].split(", ")[1]
+            location_information["level"] = self.sensor_data.iloc[next_stop_idx]["level"]
+            location_information["sensor_id"] = self.sensor_data.iloc[next_stop_idx]["sensor_id"]
+            location_information["date"] = self.sensor_data.iloc[next_stop_idx]["date"]
+            location_information["type"] = self.sensor_data.iloc[next_stop_idx]["type"].split(", ")[0]
+
+            visited_locations.append(location_information)
 
         visited_stops.append(-1) # End at station_0
         visited_locations.append(self.station_0)
         needed_time += cost_matrix[current_stop_idx, -1] # Add time to go to station_0
 
-        return visited_stops, needed_time, visited_locations
+        return visited_stops, needed_time, visited_locations, needed_capacity
 
-    def refine_path(self, starting_point, visited_stops):
+    def refine_path(self, starting_point_idx, visited_stops):
         # refine path using dijkstra
         unvisited = visited_stops[1:-1]
-        tour = [starting_point] # Start from the first point
-        locations = [self.sensor_data.iloc[starting_point]["geo_point_2d"].split(", ")]
+        tour = [visited_stops[starting_point_idx]] # Start from the first point
+        unvisited.remove(tour[-1])
+        locations = [self.sensor_data.iloc[tour[-1]]["geo_point_2d"].split(", ")]
 
         while unvisited:
             current_point = tour[-1]
@@ -100,7 +102,10 @@ if __name__ == "__main__":
     n_sensors = 42 # Number of sensors in St. Gallen
     no_empty_if_below = 0.4
     station_0 = (47.4156038, 9.3325804) # Assumption: Empyting starts and ends at Kehrichtheizkraftwerk St.Gallen
-    sensor_data = read_data(data_file, use_coordinates=True)
+    columns = [
+        'sensor_id','date','geo_point_2d','level','type'
+    ]
+    sensor_data = pd.read_csv(data_file, delimiter=',', usecols=columns)
     sensor_data = sensor_data.loc[sensor_data.groupby('sensor_id').date.idxmax()] # Get sensor_id only once
 
     map_service = MapService(vars_dict["MAPS_KEY"], sensor_data, n_sensors, station_0, no_empty_if_below)
@@ -108,9 +113,10 @@ if __name__ == "__main__":
 
     levels = [sensor_data.iloc[i]["level"] for i in range(n_sensors)]
 
-    visited_stops, needed_time, visited_locations = path_finder.find_path()
+    visited_stops, needed_time, visited_locations, needed_capacity = path_finder.find_path()
     
     print("Needed time:", needed_time)
+    print("Needed capacity:", needed_capacity)
     print("Path:")
     for stop in visited_stops:
         if stop != -1:
@@ -128,7 +134,7 @@ if __name__ == "__main__":
                 f.write(chunk)
         f.close()
 
-    most_left_point = np.argmin([float(x[1]) for x in visited_locations])
+    most_left_point = np.argmin([float(x["lat"]) for x in visited_locations[1:-1]])
     tour, locations = path_finder.refine_path(most_left_point, visited_stops)
     locations = [station_0] + locations + [station_0]
 
