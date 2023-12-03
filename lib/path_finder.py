@@ -14,7 +14,7 @@ map_file = 'map-output.png'
 map_file_refined = 'map-output-refined.png'
 
 class PathFinder:
-    capacity = 10 - 1 # size of trough minus 1 container
+    capacity = 8 - 1 # size of trough minus 1 container
     time_per_working_day = 6 * 60 * 60 # 6 hours in seconds divided by 3 because only 40/120 containers have sensors
     time_per_emptying = 15 * 60 # 15 minutes in seconds, 5 minutes per container
 
@@ -73,12 +73,12 @@ class PathFinder:
 
         return visited_stops, needed_time, visited_locations, needed_capacity
 
-    def refine_path(self, starting_point_idx, visited_stops):
+    def refine_path(self, starting_point_idx, visited_stops, visited_locations):
         # refine path using dijkstra
-        unvisited = visited_stops[1:-1]
+        unvisited = visited_stops.copy()
         tour = [visited_stops[starting_point_idx]] # Start from the first point
+        locations = [visited_locations[np.argwhere(np.array(visited_stops) == tour[-1]).ravel()[0]]]
         unvisited.remove(tour[-1])
-        locations = [self.sensor_data.iloc[tour[-1]]["geo_point_2d"].split(", ")]
 
         while unvisited:
             current_point = tour[-1]
@@ -87,7 +87,7 @@ class PathFinder:
                 if idx in unvisited:
                     nearest_point = int(idx)
             tour.append(nearest_point)
-            locations.append(self.sensor_data.iloc[nearest_point]["geo_point_2d"].split(", "))
+            locations.append(visited_locations[np.argwhere(np.array(visited_stops) == nearest_point).ravel()[0]])
             unvisited.remove(nearest_point)
 
         return tour, locations
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         f.close()
 
     most_left_point = np.argmin([float(x["lat"]) for x in visited_locations[1:-1]])
-    tour, locations = path_finder.refine_path(most_left_point, visited_stops)
+    tour, locations = path_finder.refine_path(most_left_point, visited_stops[1:-1], visited_locations[1:-1])
     locations = [station_0] + locations + [station_0]
 
     print("Refined path", tour)

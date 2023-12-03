@@ -31,10 +31,6 @@ STEP_SIZE = 5
 model = VanillaLSTM(step_size=STEP_SIZE, load_from='trained_models/vanilla-lstm-1')
 
 
-no_empty_if_below = 0.4
-n_days = 5
-
-
 def get_next_n_days(n_days: int, no_empty_if_below: float):
     all_needed_time = []
     all_needed_capacity = []
@@ -60,7 +56,7 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
         print(needed_capacity)
         print(visited_stations_by_id)
         most_left_point = np.argmin([float(x["lat"]) for x in visited_stations[1:-1]])
-        tour, locations = path_finder.refine_path(most_left_point+1, visited_stops) #+1 because visited_stations[1:-1]
+        tour, locations = path_finder.refine_path(most_left_point, visited_stops[1:-1], visited_stations[1:-1])
         locations = [station_0] + locations + [station_0]
         print(tour)
 
@@ -101,7 +97,6 @@ def get_next_n_days(n_days: int, no_empty_if_below: float):
 
     return all_needed_time, all_needed_capacity, all_visited_locations
 
-#get_next_n_days(n_days, no_empty_if_below)
 
 
 @path_api.route("", methods=['GET'])
@@ -112,3 +107,9 @@ def get_path():
     all_needed_time, all_needed_capacity, all_visited_locations = get_next_n_days(5, no_empty_if_below)
 
     return jsonify({"visited_locations": all_visited_locations, "needed_times": all_needed_time, "needed_capacities": all_needed_capacity})
+
+
+if __name__ == '__main__':
+    no_empty_if_below = 0.4
+    n_days = 5
+    get_next_n_days(n_days, no_empty_if_below)
