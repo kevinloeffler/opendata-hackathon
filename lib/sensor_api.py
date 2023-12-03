@@ -1,12 +1,16 @@
 # sensor_api.py
 from flask import Blueprint, jsonify
 from preprocessing import read_data
+import pandas as pd
 
 sensor_api = Blueprint('sensor_api', __name__)
 
-data_file = 'data/fill-level.csv'
+data_file = 'data/days_merged.csv'
 
-sensor_data = read_data(data_file, use_coordinates=True)
+columns = [
+    'sensor_id','date','geo_point_2d','level','type'
+]
+sensor_data = pd.read_csv(data_file, delimiter=',', usecols=columns)
 sensor_data = sensor_data.loc[sensor_data.groupby('sensor_id').date.idxmax()]  # Get sensor_id only once
 
 
