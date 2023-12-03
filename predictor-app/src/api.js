@@ -1,7 +1,7 @@
 /* Use the exported functions to call the API.
  * If necessary, adjust the backend address below:
  */
-const backend = "http://localhost:5000";
+const backend = "http://127.0.0.1:5000";
 
 export function getPath(params) {
   return getJson("/path", params).then(parseJSON);

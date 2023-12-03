@@ -81,7 +81,7 @@ const GlassCollectionMap = ({ key }) => {
     return <div>Loading maps</div>;
   }
 
-  const directions = response ? (
+  let directions = response ? (
     <DirectionsRenderer
       directions={response}
       options={{
@@ -94,7 +94,14 @@ const GlassCollectionMap = ({ key }) => {
     />
   ) : null;
 
+  function clicki() {
+    directions = new window.google.maps.DirectionsRenderer()
+    setResponse(null)
+    console.log("hio", directions)
+  }
   return (
+    <div>
+    <button onClick={clicki}>hio</button>
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
       mapTypeId='hybrid'
@@ -119,7 +126,7 @@ const GlassCollectionMap = ({ key }) => {
 
       {predictedRoute ? directions : null}
 
-    </GoogleMap>
+    </GoogleMap></div>
   );
 
 }

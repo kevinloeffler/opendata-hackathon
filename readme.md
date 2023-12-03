@@ -7,10 +7,10 @@ and create a pathfinding algorithm that finds the ideal routes for city employee
 ## Components 🧩
 1) AI model that predicts future fill levels based on historic data
 2) Pathfinding algorithm that finds the optimal order of recycling stations based on the predicted fill levels and location
-3) Visualise optimal route with a web app
+3) Visualization of the optimal route via a web app
 
 ## Our Result 🤗
-This is how our application would be used:
+This is how our application can be used:
 1. The user enters the web app via the browser and sees the location of all glass containers that are equipped with sensors.
 ![Start Page](./assets/start-page.png)
 2. On the left side the user can set values that steer the calculation of the path finding algorithm and the prediction:
@@ -23,15 +23,16 @@ b) The **costs** are being calculated as a mixture of a greedy algorithm and a n
 c) The algorithm then starts at station0 which is fixed at the "Kehrrichtheizkraftwerk St. Gallen" and then takes on the **path** that has the smallest cost. 
 d) When the most containers of a path are found, we implemented a **refining** step. In this step we aim to minimize the driving time by reorganizing the order of the containers in the path.
 4. The calculated path is being displayed to the user with all the necessary infos.
-TODO: screenshot sidebar
-- Location of the container
-- Fill Level of of the containers
-- Glass type of the container
-TODO: screenshot overlay
 - A selection for a date in the next 5 days to show the route for
 - Query information of the beforehand input
 - The locations of the tour with the expected fill level of each container
-TODO: screenshot result
+![Sidebar](./assets/sidebar.png)
+- Location of the container
+- Fill Level of of the container
+- Glass type of the container
+![Overlay](./assets/overlay.png)
+- The overall route of the path
+![Result](./assets/result.png)
 
 ### Details
 
@@ -41,6 +42,14 @@ The model is trained in sequences of 5 days to predict the 6. day. Therefore, th
 #### Path Refinement
 As from our rough tests, the path refinement results in a reduced driving time of approximately 5-10 minutes per path. 
 
+#### Path Constraint
+In order to make it as realistic as possible, we have defined two constraints for the path:
+1. The path should be calculated such that it fits into 1 working day (8h, adjustable via UI)
+2. The fillment level of a trough should not be exceeded (currently set to 10 containers = 1 fillment of a trough, also it is not yet distinguished between volume per glass type)
+
+We then start at station0 (Heizkraftwerk St. Gallen) and we continuously add containers until eiher the time is excceeded (inclusive time to get back to station0) or the trough is full. The needed time is calculated by summing up the driving times and the time per emptying (fixed at 15 Minutes per container - some extra time included for gradual delays) per container. 
+
+Currently, we don't consider emptying nearby containers of other glass types which are below the set threshold but in reality, this would be a reasonable extension to the application.
 
 ## Future Ideas ✨
 Ideas that can be explored if there is time:
